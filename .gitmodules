@@ -1,0 +1,3 @@
+[submodule "lib/viogsf"]
+	path = lib/viogsf
+	url = https://github.com/joshbarrass/viogsf
