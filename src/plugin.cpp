@@ -6,9 +6,21 @@
 
 #include <iostream>
 
-DB_decoder_t *plugin;
+PluginState::PluginState() : fInit(false) {}
 
-PluginState state;
+PluginState::~PluginState() {
+  if (fInit) {
+    soundShutdown(&fEmulator);
+    CPUCleanUp(&fEmulator);
+  }
+  fEmulator.~GBASystem();
+}
+
+//
+
+static DB_decoder_t *plugin;
+
+static PluginState state = PluginState();
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 
@@ -21,18 +33,17 @@ void set_plugin_pointer(DB_decoder_t *ptr) {
 }
 
 void initialise_plugin_state() {
-  state = PluginState();
+  // source: https://stackoverflow.com/a/2166155/7471232
+  // deconstruct and completely reinitialise the plugin state
+  // cannot just use
+  //    state = PluginState()
+  // here as this produces:
+  //    ...is implicitly deleted because the default definition would be ill-formed
+  // see https://stackoverflow.com/a/49826562/7471232
+  state.~PluginState();
+  new(&state) PluginState();
 }
 
 PluginState *get_plugin_state() {
   return &state;
-}
-
-PluginState::PluginState() : fInit(false) {}
-
-PluginState::~PluginState() {
-  if (fInit) {
-    // soundShutdown(&fEmulator);
-    // CPUCleanUp(&fEmulator);
-  }
 }

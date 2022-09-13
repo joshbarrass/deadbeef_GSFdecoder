@@ -27,7 +27,7 @@ public:
 
 private:
   bool fInit;
-  // GBASystem fEmulator;
+  GBASystem fEmulator;
 };
 
 PluginState *get_plugin_state();
