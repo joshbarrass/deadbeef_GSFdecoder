@@ -8,6 +8,8 @@ static int gsf_start(void) { return 0; }
 
 static int gsf_stop(void) { return 0; }
 
+static const char *exts[] = {"minigsf", NULL};
+
 static DB_decoder_t plugin = {
     DDB_REQUIRE_API_VERSION(1, 12)
  
@@ -17,8 +19,11 @@ static DB_decoder_t plugin = {
     .plugin.id = "gsfdecoder",
     .plugin.name = "GSF Decoder",
     .plugin.descr = "GSF Decoder based on viogsf library utilising VBA-M.",
+    .plugin.website = "https://github.com/joshbarrass/deadbeef_GSFdecoder",
+    .plugin.copyright = "Licensed under GPL v2",
     .plugin.start = gsf_start,
-    .plugin.stop = gsf_stop
+    .plugin.stop = gsf_stop,
+    .exts = exts,
 };
 
 DB_plugin_t *GSFdecoder_load(DB_functions_t *api) {
