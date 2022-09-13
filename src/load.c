@@ -1,6 +1,10 @@
 #define DDB_API_LEVEL 12
 #define DDB_WARN_DEPRECATED 1
 #include "deadbeef/deadbeef.h"
+#include "api.h"
+#include "plugin.h"
+
+#include "play.h"
 
 DB_plugin_t* GSFdecoder_load (DB_functions_t *api);
 
@@ -23,9 +27,14 @@ static DB_decoder_t plugin = {
     .plugin.copyright = "Licensed under GPL v2",
     .plugin.start = gsf_start,
     .plugin.stop = gsf_stop,
+    .open = gsf_open,
+    .init = gsf_init,
     .exts = exts,
 };
 
 DB_plugin_t *GSFdecoder_load(DB_functions_t *api) {
+  set_API_pointer(api);
+  set_plugin_pointer(&plugin);
+  initialise_plugin_state();
   return DB_PLUGIN(&plugin);
 }
