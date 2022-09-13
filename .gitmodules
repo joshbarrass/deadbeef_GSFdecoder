@@ -1,3 +1,6 @@
 [submodule "lib/viogsf"]
 	path = lib/viogsf
 	url = https://github.com/joshbarrass/viogsf
+[submodule "lib/psflib"]
+	path = lib/psflib
+	url = https://github.com/kode54/psflib
