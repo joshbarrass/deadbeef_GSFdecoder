@@ -1,3 +1,5 @@
+set(CMAKE_INSTALL_PREFIX "/opt/deadbeef/lib/deadbeef")
+
 # Setup project
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(GSFdecoder)
@@ -29,3 +31,5 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.h)
 add_library(GSFdecoder MODULE ${sources} ${headers})
 set_target_properties(GSFdecoder PROPERTIES PREFIX "")
 target_link_libraries(GSFdecoder viogsf psflib)
+
+install(TARGETS GSFdecoder LIBRARY DESTINATION .)
