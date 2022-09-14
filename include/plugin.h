@@ -27,7 +27,8 @@ struct PluginState {
 
   bool fInit;
   DB_fileinfo_t fFileInfo;
-  GSF_ROM rom;
+  GSF_ROM ROM;
+  uint32_t entry_point;
   GBASystem fEmulator;
 };
 

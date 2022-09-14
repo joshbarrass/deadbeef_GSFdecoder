@@ -23,6 +23,8 @@ extern "C" {
       psf_ftell
       };
 
+  gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size, const uint8_t *reserved, size_t reserved_size);
+
 #ifdef __cplusplus
 }
 #endif
