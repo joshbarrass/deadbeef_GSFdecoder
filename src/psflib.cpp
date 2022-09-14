@@ -1,4 +1,9 @@
+#ifdef __cplusplus
 #include <cstdint>
+#else
+// TODO: is it right to include stdint.h in C instead of cstdint?
+#include <stdint.h>
+#endif
 #include "psflib/psflib.h"
 #include "deadbeef/deadbeef.h"
 #include "api.h"
