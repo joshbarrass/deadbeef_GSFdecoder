@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-PluginState::PluginState() : fInit(false) {}
+PluginState::PluginState() : fInit(false), ROM() {}
 
 PluginState::~PluginState() {
   if (fInit) {

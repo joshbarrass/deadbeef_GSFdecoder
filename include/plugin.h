@@ -19,6 +19,7 @@ extern "C" {
 // plugin state only used by C++ code and is incompatible with C code
 #ifdef __cplusplus
 #include "viogsf/vbam/gba/GBA.h"
+#include "rom.h"
 
 struct PluginState {
   PluginState();
@@ -26,6 +27,7 @@ struct PluginState {
 
   bool fInit;
   DB_fileinfo_t fFileInfo;
+  GSF_ROM rom;
   GBASystem fEmulator;
 };
 
