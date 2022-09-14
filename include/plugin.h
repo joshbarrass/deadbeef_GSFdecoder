@@ -20,13 +20,12 @@ extern "C" {
 #ifdef __cplusplus
 #include "viogsf/vbam/gba/GBA.h"
 
-class PluginState {
-public:
+struct PluginState {
   PluginState();
   ~PluginState();
 
-private:
   bool fInit;
+  DB_fileinfo_t fFileInfo;
   GBASystem fEmulator;
 };
 
