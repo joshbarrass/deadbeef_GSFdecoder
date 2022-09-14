@@ -16,7 +16,7 @@ cmake ..
 make
 ```
 
-By defualt, running `make install` will then install the plugin (globally) to `/opt/deadbeef/lib/deadbeef`. If this is not correct, replace the fourth line above with:
+By defualt, running `make install` will then install the plugin to `/opt/deadbeef/lib/deadbeef` (global install). If this is not correct, replace the fourth line above with:
 
 ```
 cmake -DCMAKE_INSTALL_PREFIX=<path> .. 
