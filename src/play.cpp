@@ -224,6 +224,18 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
   if (meta.Title.length() > 0) {
     deadbeef->pl_add_meta(it, "title", meta.Title.c_str());
   }
+  if (meta.Artist.length() > 0) {
+    deadbeef->pl_add_meta(it, "artist", meta.Artist.c_str());
+  }
+  if (meta.Year.length() > 0) {
+    deadbeef->pl_add_meta(it, "year", meta.Year.c_str());
+  }
+  if (meta.Game.length() > 0) {
+    deadbeef->pl_add_meta(it, "album", meta.Game.c_str());
+  }
+  if (meta.Comment.length() > 0) {
+    deadbeef->pl_add_meta(it, "comment", meta.Comment.c_str());
+  }
 
   float total_duration = (float)meta.Length/1000.;
   deadbeef->plt_set_item_duration(plt, it, total_duration);
