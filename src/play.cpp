@@ -209,6 +209,12 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state();
+  // clear the metadata in the current state, else this can lead to
+  // tracks with unspecified tags inheriting those tags from the last
+  // played track
+  // TODO: hopefully this will not be necessary once the state is
+  // stored around the DB_fileinfo_t context
+  state->fMetadata = TrackMetadata();
   
   std::string uri(fname);
   if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
