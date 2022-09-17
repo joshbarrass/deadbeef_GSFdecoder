@@ -9,7 +9,7 @@ constexpr char GSF_VERSION = 0x22;
 extern "C" {
 #endif
 
-  void* psf_fopen(void *context, const char *path);
+  void *psf_fopen(void *context, const char *path);
   size_t psf_fread(void * buffer, size_t size, size_t count, void * handle);
   int psf_fseek(void *handle, int64_t offset, int whence);
   int psf_fclose(void *handle);
