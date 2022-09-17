@@ -4,10 +4,12 @@
 // TODO: is it right to include stdint.h in C instead of cstdint?
 #include <stdint.h>
 #endif
+#include <cstring>
 #include "psflib/psflib.h"
 #include "deadbeef/deadbeef.h"
 #include "api.h"
 #include "plugin.h"
+#include "metadata.h"
 
 constexpr char GSF_VERSION = 0x22;
 
@@ -136,6 +138,29 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   }
 
   state->ROM.WriteBytes(exe + 0x0C, rom_size, offset);
+
+  return 0;
+}
+
+// metadata callback for psflib
+int gsf_info_callback(void *context, const char *name, const char *value) {
+  PluginState *state = (PluginState*)context;
+
+  if (!strcasecmp(name, "length")) {
+    state->fMetadata.Length = parse_time(value);
+  } else if (!strcasecmp(name, "fade")) {
+    state->fMetadata.Fadeout = parse_time(value);
+  } else if (!strcasecmp(name, "title")) {
+    state->fMetadata.Title = value;
+  } else if (!strcasecmp(name, "artist")) {
+    state->fMetadata.Artist = value;
+  } else if (!strcasecmp(name, "year")) {
+    state->fMetadata.Year = value;
+  } else if (!strcasecmp(name, "game")) {
+    state->fMetadata.Game = value;
+  } else if (!strcasecmp(name, "comment")) {
+    state->fMetadata.Comment = value;
+  }
 
   return 0;
 }
