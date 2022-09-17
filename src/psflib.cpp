@@ -13,6 +13,10 @@
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 
+#ifdef STDERR_DEBUGGING
+#include <iostream>
+#endif
+
 /* Wrappers around deadbeef's file functions, required by psflib */
 
 #ifdef __cplusplus
@@ -121,7 +125,10 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   }
 
   uint32_t entry_point = read_long_le(exe);
-  uint32_t offset = read_long_le(exe + 0x04);
+  // must mask the offset
+  // if you don't, a HUGE buffer will be allocated (which is mostly
+  // empty space) and the emulator won't play the ROM properly
+  uint32_t offset = read_long_le(exe + 0x04) & 0x1ffffff;
   uint32_t rom_size = read_long_le(exe + 0x08);
 
   // standard specifies only two valid entry points, but there may be
@@ -131,7 +138,13 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   if (entry_point != 0x2000000 || entry_point != 0x8000000) {
     trace("GSF decoder warning: unexpected entry point %X\n", entry_point);
   }
-  state->entry_point = entry_point;
+  if (!state->set_entry) {
+    state->entry_point = entry_point;
+    #ifdef STDERR_DEBUGGING
+    std::cerr << "Entry point: " << entry_point << std::endl;
+    #endif
+    state->set_entry = true;
+  }
 
   // ensure we do not over-read if asked to by a malformed GSF file
   if (rom_size > exe_size - 12) {

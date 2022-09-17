@@ -33,6 +33,7 @@ struct PluginState {
   GSFSoundOut output;
   GSF_ROM ROM;
   uint32_t entry_point;
+  bool set_entry;
   GBASystem fEmulator;
 };
 
