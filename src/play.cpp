@@ -24,10 +24,65 @@ DB_fileinfo_t *gsf_open(uint32_t hints) {
   return &(state->fFileInfo);
 }
 
-// TODO: init function
-// prepares song for loading
+// init function
+// prepares song for playing
 //
 int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
+  auto deadbeef = get_API_pointer();
+  auto plugin = get_plugin_pointer();
+  PluginState *state = get_plugin_state();
+
+  info->fmt.bps = 16;
+  info->fmt.channels = 2;
+  info->fmt.samplerate = deadbeef->conf_get_int ("synth.samplerate", 44100);
+  info->fmt.channelmask = info->fmt.channels == 1 ? DDB_SPEAKER_FRONT_LEFT : (DDB_SPEAKER_FRONT_LEFT | DDB_SPEAKER_FRONT_RIGHT);
+  info->readpos = 0;
+  info->plugin = plugin;
+
+  deadbeef->pl_lock ();
+  std::string uri(deadbeef->pl_find_meta (it, ":URI"));
+  deadbeef->pl_unlock ();
+
+  // if we read metadata again here, this populates the length fields etc.
+  if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
+               state, 0, nullptr, nullptr) != GSF_VERSION) {
+    trace("failed to load GSF metadata\n");
+    return -1;
+  }
+
+  if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, gsf_load_callback,
+               state, 0, 0, 0, nullptr, nullptr) != GSF_VERSION) {
+    trace("failed to load GSF program data\n");
+    return -2;
+  }
+
+  #ifdef STDERR_DEBUGGING
+  std::cerr << "ROM Size: " << state->ROM.GetSize() << std::endl;
+  // unsigned char *ROM = state->ROM.GetArray();
+  // for (int i = 0; i < state->ROM.GetSize(); ++i) {
+  //   std::cerr << ROM[i];
+  // }
+  // std::cerr << std::endl;
+  #endif
+
+  // initialise the emulator
+  // multiboot corresponds to 0x2000000 entry point
+  state->fEmulator.cpuIsMultiBoot = (state->entry_point >> 24 == 2);
+  int size = CPULoadRom(&state->fEmulator, state->ROM.GetArray(), state->ROM.GetSize());
+  if (!size) {
+    trace("failed to load ROM\n");
+    return -3;
+  }
+  soundInit(&state->fEmulator, &state->output);
+  soundReset(&state->fEmulator);
+  CPUInit(&state->fEmulator);
+  CPUReset(&state->fEmulator);
+  state->fInit = true;
+
+  #ifdef STDERR_DEBUGGING
+  std::cerr << "Init!" << std::endl;
+  #endif
+
   return 0;
 }
 

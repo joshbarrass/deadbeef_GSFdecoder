@@ -21,6 +21,7 @@ extern "C" {
 #include "viogsf/vbam/gba/GBA.h"
 #include "rom.h"
 #include "metadata.h"
+#include "sound.h"
 
 struct PluginState {
   PluginState();
@@ -29,6 +30,7 @@ struct PluginState {
   bool fInit;
   DB_fileinfo_t fFileInfo;
   TrackMetadata fMetadata;
+  GSFSoundOut output;
   GSF_ROM ROM;
   uint32_t entry_point;
   GBASystem fEmulator;

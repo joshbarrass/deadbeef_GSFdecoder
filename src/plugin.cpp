@@ -12,6 +12,7 @@ PluginState::~PluginState() {
   if (fInit) {
     soundShutdown(&fEmulator);
     CPUCleanUp(&fEmulator);
+    fInit = false;
   }
   fEmulator.~GBASystem();
 }
