@@ -11,8 +11,6 @@
 #include "plugin.h"
 #include "metadata.h"
 
-constexpr char GSF_VERSION = 0x22;
-
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 
 /* Wrappers around deadbeef's file functions, required by psflib */

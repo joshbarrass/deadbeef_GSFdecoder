@@ -3,6 +3,8 @@
 
 #include "psflib/psflib.h"
 
+constexpr char GSF_VERSION = 0x22;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,7 +25,9 @@ extern "C" {
       psf_ftell
       };
 
-  gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size, const uint8_t *reserved, size_t reserved_size);
+  int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size, const uint8_t *reserved, size_t reserved_size);
+
+  int gsf_info_callback(void *context, const char *name, const char *value);
 
 #ifdef __cplusplus
 }
