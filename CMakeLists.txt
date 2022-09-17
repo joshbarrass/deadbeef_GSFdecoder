@@ -29,6 +29,7 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.h)
 
 # build library
 add_library(GSFdecoder MODULE ${sources} ${headers})
+set_property(TARGET GSFdecoder PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_target_properties(GSFdecoder PROPERTIES PREFIX "")
 target_link_libraries(GSFdecoder viogsf psflib)
 
