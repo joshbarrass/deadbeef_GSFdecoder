@@ -8,6 +8,14 @@
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 
+#ifdef STDERR_DEBUGGING
+#include <iostream>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // open function
 // provides deadbeef with somewhere to put the file info
 // file info will be stored in the PluginState
@@ -19,8 +27,12 @@ DB_fileinfo_t *gsf_open(uint32_t hints) {
 // TODO: init function
 // prepares song for loading
 //
-int gsf_init(DB_fileinfo_t *_info, DB_playItem_t *it) {
+int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   return 0;
+}
+
+void gsf_free(DB_fileinfo_t *_info) {
+  initialise_plugin_state();
 }
 
 DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
@@ -44,7 +56,7 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
     deadbeef->pl_add_meta(it, "title", meta.Title.c_str());
   }
 
-  float total_duration = (meta.Length+meta.Fadeout)/1000.;
+  float total_duration = (float)meta.Length/1000.;
   deadbeef->plt_set_item_duration(plt, it, total_duration);
 
   after = deadbeef->plt_insert_item(plt, after, it);
@@ -52,3 +64,7 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
 
   return after;
 }
+
+#ifdef __cplusplus
+}
+#endif
