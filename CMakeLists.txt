@@ -10,6 +10,12 @@ set(CMAKE_C_VERSION 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+# testing new error function
+OPTION (STDERR_DEBUGGING "Write trace messages to stderr as well" OFF)
+IF(STDERR_DEBUGGING)
+  add_compile_definitions(STDERR_DEBUGGING=1)
+ENDIF()
+
 # add include dir
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/lib)
