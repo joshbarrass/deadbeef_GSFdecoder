@@ -90,6 +90,70 @@ void gsf_free(DB_fileinfo_t *_info) {
   initialise_plugin_state();
 }
 
+int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
+  auto deadbeef = get_API_pointer();
+  auto plugin = get_plugin_pointer();
+  PluginState *state = get_plugin_state();
+
+  #ifdef STDERR_DEBUGGING
+    std::cerr << "readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
+    #endif
+    if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
+    trace("end of track\n");
+    return 0;
+  }
+
+  #ifdef STDERR_DEBUGGING
+  std::cerr << state->output.bytes_in_buffer << " bytes in buffer" << std::endl;
+  #endif
+
+  trace("have %d bytes\n", state->output.bytes_in_buffer);
+  #ifdef STDERR_DEBUGGING
+  std::cerr << "read " << state->output.bytes_in_buffer << " bytes" << std::endl;
+  #endif
+
+  #ifdef STDERR_DEBUGGING
+  std::cerr << "buffer size " << state->output.sample_buffer.size() << std::endl;
+  #endif
+
+  trace("requested %d bytes\n", nbytes);
+  #ifdef STDERR_DEBUGGING
+  std::cerr << "requested " << nbytes << " bytes" << std::endl;
+  #endif
+
+  while (state->output.bytes_in_buffer < nbytes) {
+    CPULoop(&state->fEmulator, 250000);
+  }
+
+  size_t to_copy = std::min(nbytes, (int)(state->output.bytes_in_buffer));
+  #ifdef STDERR_DEBUGGING
+  std::cerr << "Must copy " << to_copy << " samples" << std::endl;
+  #endif
+  unsigned char *head_sample = &state->output.sample_buffer[0];
+  #ifdef STDERR_DEBUGGING
+  std::cerr << (int)*head_sample << std::endl;
+  #endif
+  std::copy(head_sample, head_sample+to_copy, buffer);
+
+  // move the excess samples down to the start of the buffer, then
+  // trim the buffer in preparation for the next read
+  if (state->output.bytes_in_buffer > to_copy) {
+    std::copy(head_sample + to_copy,
+              head_sample + state->output.bytes_in_buffer,
+              head_sample);
+    state->output.sample_buffer.resize(state->output.bytes_in_buffer - to_copy);
+  } else {
+    state->output.sample_buffer.resize(0);
+  }
+  state->output.bytes_in_buffer -= to_copy;
+
+  // 16-bit samples, stereo, so 4 bytes per sample
+  // 44100 samples per second
+  _info->readpos += (float)nbytes / 44100 / 4;
+
+  return to_copy;
+}
+
 DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
                       const char *fname) {
   auto deadbeef = get_API_pointer();
