@@ -141,9 +141,9 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
     std::copy(head_sample + to_copy,
               head_sample + state->output.bytes_in_buffer,
               head_sample);
-    state->output.sample_buffer.resize(state->output.bytes_in_buffer - to_copy);
+    // state->output.sample_buffer.resize(state->output.bytes_in_buffer - to_copy);
   } else {
-    state->output.sample_buffer.resize(0);
+    // state->output.sample_buffer.resize(0);
   }
   state->output.bytes_in_buffer -= to_copy;
 
@@ -152,6 +152,56 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   _info->readpos += (float)nbytes / 44100 / 4;
 
   return to_copy;
+}
+
+int gsf_seek(DB_fileinfo_t *info, float seconds) {
+  PluginState *state = get_plugin_state();
+
+  // cannot emulate backwards; only option is to restart the emulator
+  if (info->readpos > seconds) {
+    CPUReset(&state->fEmulator);
+    info->readpos = 0;
+  }
+
+  float to_seek = seconds - info->readpos;
+  size_t &in_buffer = state->output.bytes_in_buffer;
+  while (to_seek > 0) {
+    #ifdef STDERR_DEBUGGING
+    std::cerr << "Bytes in buffer: " << in_buffer << std::endl;
+    std::cerr << "to_seek: " << to_seek << "s" << std::endl;
+    #endif
+    if (in_buffer > 0) {
+      float seconds_in_buffer = (float)in_buffer / 44100 / 4;
+      if (seconds_in_buffer <= to_seek) {
+        #ifdef STDERR_DEBUGGING
+        std::cerr << "Discarding buffer" << std::endl;
+        #endif
+        // discard the entire buffer if there's less data than we need
+        in_buffer = 0;
+        to_seek -= seconds_in_buffer;
+        continue;
+      }
+      // otherwise, drop as many bytes as we need for the needed seek
+      int bytes_needed = to_seek * 44100 * 4;
+      // must ensure the bytes_needed is sample-aligned i.e. must be a
+      // multiple of 4. If it isn't, the music will break
+      while (bytes_needed % 4 != 0) {
+        bytes_needed += 1;
+      }
+      unsigned char *head_sample = &state->output.sample_buffer[0];
+      std::copy(head_sample + bytes_needed,
+                head_sample + in_buffer,
+                head_sample);
+      in_buffer -= bytes_needed;
+      to_seek = 0;
+      break;
+    } else {
+      // buffer empty; get more samples
+      CPULoop(&state->fEmulator, 250000);
+    }
+  }
+  info->readpos = seconds;
+  return 0;
 }
 
 DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
