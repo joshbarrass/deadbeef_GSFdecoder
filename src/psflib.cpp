@@ -15,6 +15,10 @@
 
 /* Wrappers around deadbeef's file functions, required by psflib */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void* psf_fopen(void *context, const char *path) {
   DB_functions_t *deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
@@ -162,3 +166,7 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
 
   return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif
