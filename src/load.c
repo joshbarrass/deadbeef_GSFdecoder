@@ -27,6 +27,11 @@ static DB_decoder_t plugin = {
     .plugin.copyright = "Licensed under GPL v2",
     .plugin.start = gsf_start,
     .plugin.stop = gsf_stop,
+    .plugin.flags = 0
+    #ifdef ENABLE_LOGGING
+    | DDB_PLUGIN_FLAG_LOGGING
+    #endif
+    ,
     .open = gsf_open,
     .init = gsf_init,
     .free = gsf_free,

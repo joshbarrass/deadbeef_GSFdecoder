@@ -10,8 +10,12 @@ set(CMAKE_C_VERSION 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# testing new error function
-OPTION (STDERR_DEBUGGING "Write trace messages to stderr as well" OFF)
+OPTION (ENABLE_LOGGING "Write trace messages to deadbeef's log" OFF)
+IF(ENABLE_LOGGING)
+  add_compile_definitions(ENABLE_LOGGING=1)
+ENDIF()
+
+OPTION (STDERR_DEBUGGING "Write trace messages to stderr" OFF)
 IF(STDERR_DEBUGGING)
   add_compile_definitions(STDERR_DEBUGGING=1)
 ENDIF()

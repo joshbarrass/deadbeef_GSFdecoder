@@ -12,6 +12,7 @@
 #include "metadata.h"
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
+#define tracedbg(...) { deadbeef->log_detailed (&plugin->plugin, 1, __VA_ARGS__); }
 
 #ifdef STDERR_DEBUGGING
 #include <iostream>
@@ -28,7 +29,7 @@ void* psf_fopen(void *context, const char *path) {
   auto plugin = get_plugin_pointer();
   DB_FILE *file = deadbeef->fopen(path);
   if (!file) {
-    trace("psf: failed to fopen\n");
+    trace("GSF ERR: failed to fopen\n");
     return nullptr;
   }
   return file;
@@ -121,7 +122,7 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   // reserved area has indeterminate/non-standard usage in GSF, so it
   // is unexpected to find data here
   if (reserved_size > 0) {
-    trace("GSF decoder warning: reserved section contains data, so the file may not be played properly\n");
+    trace("GSF WARN: reserved section contains data, so the file may not be played properly\n");
   }
 
   uint32_t entry_point = read_long_le(exe);
@@ -136,19 +137,20 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   // TODO: should this only be set once? (i.e. by the first loaded
   // GSF?) see: audiodecoder.gsf
   if (entry_point != 0x2000000 || entry_point != 0x8000000) {
-    trace("GSF decoder warning: unexpected entry point %X\n", entry_point);
+    trace("GSF WARN: unexpected entry point %X\n", entry_point);
   }
   if (!state->set_entry) {
     state->entry_point = entry_point;
+    tracedbg("GSF DEBUG: Entry point: %X\n", entry_point);
     #ifdef STDERR_DEBUGGING
-    std::cerr << "Entry point: " << entry_point << std::endl;
+    std::cerr << "GSF DEBUG: Entry point: " << entry_point << std::endl;
     #endif
     state->set_entry = true;
   }
 
   // ensure we do not over-read if asked to by a malformed GSF file
   if (rom_size > exe_size - 12) {
-    trace("GSF decoder error: exe_size (%d) too small for given rom size (%d)\n", exe_size, rom_size);
+    trace("GSF ERR: exe_size (%d) too small for given rom size (%d)\n", exe_size, rom_size);
     return -1;
   }
 

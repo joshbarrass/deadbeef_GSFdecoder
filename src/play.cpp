@@ -7,6 +7,7 @@
 #include "psflib.h"
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
+#define tracedbg(...) { deadbeef->log_detailed (&plugin->plugin, 1, __VA_ARGS__); }
 
 #ifdef STDERR_DEBUGGING
 #include <iostream>
@@ -46,23 +47,19 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   // if we read metadata again here, this populates the length fields etc.
   if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
                state, 0, nullptr, nullptr) != GSF_VERSION) {
-    trace("failed to load GSF metadata\n");
+    trace("GSF ERR: failed to load GSF metadata\n");
     return -1;
   }
 
   if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, gsf_load_callback,
                state, 0, 0, 0, nullptr, nullptr) != GSF_VERSION) {
-    trace("failed to load GSF program data\n");
+    trace("GSF ERR: failed to load GSF program data\n");
     return -2;
   }
 
+  trace("GSF INFO: ROM Size: %d\n", state->ROM.GetSize());
   #ifdef STDERR_DEBUGGING
-  std::cerr << "ROM Size: " << state->ROM.GetSize() << std::endl;
-  // unsigned char *ROM = state->ROM.GetArray();
-  // for (int i = 0; i < state->ROM.GetSize(); ++i) {
-  //   std::cerr << ROM[i];
-  // }
-  // std::cerr << std::endl;
+  std::cerr << "GSF INFO: ROM Size: " << state->ROM.GetSize() << std::endl;
   #endif
 
   // initialise the emulator
@@ -70,7 +67,7 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   state->fEmulator.cpuIsMultiBoot = (state->entry_point >> 24 == 2);
   int size = CPULoadRom(&state->fEmulator, state->ROM.GetArray(), state->ROM.GetSize());
   if (!size) {
-    trace("failed to load ROM\n");
+    trace("GSF ERR: failed to load ROM\n");
     return -3;
   }
   soundInit(&state->fEmulator, &state->output);
@@ -79,8 +76,9 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   CPUReset(&state->fEmulator);
   state->fInit = true;
 
+  tracedbg("GSF DEBUG: Init!\n");
   #ifdef STDERR_DEBUGGING
-  std::cerr << "Init!" << std::endl;
+  std::cerr << "GSF DEBUG: Init!" << std::endl;
   #endif
 
   return 0;
@@ -95,30 +93,26 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state();
 
+  tracedbg("GSF DEBUG: readpos: %d, length: %d\n", _info->readpos, state->fMetadata.Length / 1000);
   #ifdef STDERR_DEBUGGING
-    std::cerr << "readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
-    #endif
-    if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
-    trace("end of track\n");
+  std::cerr << "GSF DEBUG: readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
+  #endif
+  if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
+    tracedbg("GSF DEBUG: end of track\n");
     return 0;
   }
 
+  tracedbg("GSF DEBUG: %d bytes in buffer\n", state->output.bytes_in_buffer);
   #ifdef STDERR_DEBUGGING
-  std::cerr << state->output.bytes_in_buffer << " bytes in buffer" << std::endl;
+  std::cerr << "GSF DEBUG: " << state->output.bytes_in_buffer << " bytes in buffer" << std::endl;
   #endif
-
-  trace("have %d bytes\n", state->output.bytes_in_buffer);
+  tracedbg("GSF DEBUG: buffer size %d\n", state->output.sample_buffer.size());
   #ifdef STDERR_DEBUGGING
-  std::cerr << "read " << state->output.bytes_in_buffer << " bytes" << std::endl;
+  std::cerr << "GSF DEBUG: buffer size " << state->output.sample_buffer.size() << std::endl;
   #endif
-
+  tracedbg("GSF DEBUG: requested %d bytes\n", nbytes);
   #ifdef STDERR_DEBUGGING
-  std::cerr << "buffer size " << state->output.sample_buffer.size() << std::endl;
-  #endif
-
-  trace("requested %d bytes\n", nbytes);
-  #ifdef STDERR_DEBUGGING
-  std::cerr << "requested " << nbytes << " bytes" << std::endl;
+  std::cerr << "GSF DEBUG: requested " << nbytes << " bytes" << std::endl;
   #endif
 
   while (state->output.bytes_in_buffer < nbytes) {
@@ -126,13 +120,11 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   }
 
   size_t to_copy = std::min(nbytes, (int)(state->output.bytes_in_buffer));
+  tracedbg("GSF DEBUG: Must copy %d bytes\n", to_copy);
   #ifdef STDERR_DEBUGGING
-  std::cerr << "Must copy " << to_copy << " samples" << std::endl;
+  std::cerr << "GSF DEBUG: Must copy " << to_copy << " bytes" << std::endl;
   #endif
   unsigned char *head_sample = &state->output.sample_buffer[0];
-  #ifdef STDERR_DEBUGGING
-  std::cerr << (int)*head_sample << std::endl;
-  #endif
   std::copy(head_sample, head_sample+to_copy, buffer);
 
   // move the excess samples down to the start of the buffer, then
@@ -155,6 +147,8 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 }
 
 int gsf_seek(DB_fileinfo_t *info, float seconds) {
+  auto deadbeef = get_API_pointer();
+  auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state();
 
   // cannot emulate backwards; only option is to restart the emulator
@@ -166,15 +160,18 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
   float to_seek = seconds - info->readpos;
   size_t &in_buffer = state->output.bytes_in_buffer;
   while (to_seek > 0) {
+    tracedbg("GSF DEBUG: Bytes in buffer: %d\n", in_buffer);
+    tracedbg("GSF DEBUG: to_seek: %d\n", to_seek);
     #ifdef STDERR_DEBUGGING
-    std::cerr << "Bytes in buffer: " << in_buffer << std::endl;
-    std::cerr << "to_seek: " << to_seek << "s" << std::endl;
+    std::cerr << "GSF DEBUG: Bytes in buffer: " << in_buffer << std::endl;
+    std::cerr << "GSF DEBUG: to_seek: " << to_seek << "s" << std::endl;
     #endif
     if (in_buffer > 0) {
       float seconds_in_buffer = (float)in_buffer / 44100 / 4;
       if (seconds_in_buffer <= to_seek) {
+        tracedbg("GSF DEBUG: Discarding buffer\n");
         #ifdef STDERR_DEBUGGING
-        std::cerr << "Discarding buffer" << std::endl;
+        std::cerr << "GSF DEBUG: Discarding buffer" << std::endl;
         #endif
         // discard the entire buffer if there's less data than we need
         in_buffer = 0;
@@ -219,7 +216,7 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
   std::string uri(fname);
   if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
                state, 0, nullptr, nullptr) != GSF_VERSION) {
-    trace("failed to load GSF metadata\n");
+    trace("GSF ERR: failed to load GSF metadata\n");
     return nullptr;
   }
 
