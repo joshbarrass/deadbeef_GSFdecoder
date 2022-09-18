@@ -57,7 +57,7 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
     return -2;
   }
 
-  trace("GSF INFO: ROM Size: %d\n", state->ROM.GetSize());
+  tracedbg("GSF DEBUG: ROM Size: %d\n", state->ROM.GetSize());
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF INFO: ROM Size: " << state->ROM.GetSize() << std::endl;
   #endif
