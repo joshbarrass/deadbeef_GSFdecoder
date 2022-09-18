@@ -141,11 +141,13 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   }
   if (!state->set_entry) {
     state->entry_point = entry_point;
+    state->set_entry = true;
+    #ifdef BUILD_DEBUG
     tracedbg("GSF DEBUG: Entry point: %X\n", entry_point);
     #ifdef STDERR_DEBUGGING
     std::cerr << "GSF DEBUG: Entry point: " << entry_point << std::endl;
     #endif
-    state->set_entry = true;
+    #endif
   }
 
   // ensure we do not over-read if asked to by a malformed GSF file

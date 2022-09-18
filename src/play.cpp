@@ -57,9 +57,11 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
     return -2;
   }
 
+  #ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: ROM Size: %d\n", state->ROM.GetSize());
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF INFO: ROM Size: " << state->ROM.GetSize() << std::endl;
+  #endif
   #endif
 
   // initialise the emulator
@@ -76,9 +78,11 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   CPUReset(&state->fEmulator);
   state->fInit = true;
 
+  #ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: Init!\n");
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: Init!" << std::endl;
+  #endif
   #endif
 
   return 0;
@@ -93,15 +97,20 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state();
 
+  #ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: readpos: %d, length: %d\n", _info->readpos, state->fMetadata.Length / 1000);
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
   #endif
+  #endif
   if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
+    #ifdef BUILD_DEBUG
     tracedbg("GSF DEBUG: end of track\n");
+    #endif
     return 0;
   }
 
+  #ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: %d bytes in buffer\n", state->output.bytes_in_buffer);
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: " << state->output.bytes_in_buffer << " bytes in buffer" << std::endl;
@@ -114,15 +123,18 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: requested " << nbytes << " bytes" << std::endl;
   #endif
+  #endif
 
   while (state->output.bytes_in_buffer < nbytes) {
     CPULoop(&state->fEmulator, 250000);
   }
 
   size_t to_copy = std::min(nbytes, (int)(state->output.bytes_in_buffer));
+  #ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: Must copy %d bytes\n", to_copy);
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: Must copy " << to_copy << " bytes" << std::endl;
+  #endif
   #endif
   unsigned char *head_sample = &state->output.sample_buffer[0];
   std::copy(head_sample, head_sample+to_copy, buffer);
@@ -160,18 +172,22 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
   float to_seek = seconds - info->readpos;
   size_t &in_buffer = state->output.bytes_in_buffer;
   while (to_seek > 0) {
+    #ifdef BUILD_DEBUG
     tracedbg("GSF DEBUG: Bytes in buffer: %d\n", in_buffer);
     tracedbg("GSF DEBUG: to_seek: %d\n", to_seek);
     #ifdef STDERR_DEBUGGING
     std::cerr << "GSF DEBUG: Bytes in buffer: " << in_buffer << std::endl;
     std::cerr << "GSF DEBUG: to_seek: " << to_seek << "s" << std::endl;
     #endif
+    #endif
     if (in_buffer > 0) {
       float seconds_in_buffer = (float)in_buffer / 44100 / 4;
       if (seconds_in_buffer <= to_seek) {
+        #ifdef BUILD_DEBUG
         tracedbg("GSF DEBUG: Discarding buffer\n");
         #ifdef STDERR_DEBUGGING
         std::cerr << "GSF DEBUG: Discarding buffer" << std::endl;
+        #endif
         #endif
         // discard the entire buffer if there's less data than we need
         in_buffer = 0;
