@@ -122,7 +122,7 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   // reserved area has indeterminate/non-standard usage in GSF, so it
   // is unexpected to find data here
   if (reserved_size > 0) {
-    trace("GSF WARN: reserved section contains data, so the file may not be played properly\n");
+    tracedbg("GSF WARN: reserved section contains data, so the file may not be played properly\n");
   }
 
   uint32_t entry_point = read_long_le(exe);
@@ -137,7 +137,7 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   // TODO: should this only be set once? (i.e. by the first loaded
   // GSF?) see: audiodecoder.gsf
   if (entry_point != 0x2000000 && entry_point != 0x8000000) {
-    trace("GSF WARN: unexpected entry point %X\n", entry_point);
+    tracedbg("GSF WARN: unexpected entry point %X\n", entry_point);
   }
   if (!state->set_entry) {
     state->entry_point = entry_point;
