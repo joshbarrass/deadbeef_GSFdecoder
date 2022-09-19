@@ -29,6 +29,7 @@ struct PluginState {
 
   bool fInit;
   DB_fileinfo_t fFileInfo;
+  uint32_t hints;
   TrackMetadata fMetadata;
   GSFSoundOut output;
   GSF_ROM ROM;

@@ -22,6 +22,7 @@ extern "C" {
 // file info will be stored in the PluginState
 DB_fileinfo_t *gsf_open(uint32_t hints) {
   PluginState *state = get_plugin_state();
+  state->hints = hints;
   return &(state->fFileInfo);
 }
 
@@ -32,6 +33,14 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state();
+
+  #ifdef BUILD_DEBUG
+  if (state->hints & DDB_DECODER_HINT_CAN_LOOP) {
+    tracedbg("GSF DEBUG: CAN_LOOP is set\n");
+  } else {
+    tracedbg("GSF DEBUG: CAN_LOOP is NOT set\n");
+  }
+  #endif
 
   info->fmt.bps = 16;
   info->fmt.channels = 2;
@@ -103,11 +112,13 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
   #endif
   #endif
-  if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
-    #ifdef BUILD_DEBUG
-    tracedbg("GSF DEBUG: end of track\n");
-    #endif
-    return 0;
+  if (!(deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) || !(state->hints & DDB_DECODER_HINT_CAN_LOOP)) {
+    if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
+#ifdef BUILD_DEBUG
+      tracedbg("GSF DEBUG: end of track\n");
+#endif
+      return 0;
+    }
   }
 
   #ifdef BUILD_DEBUG
