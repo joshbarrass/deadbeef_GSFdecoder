@@ -1,5 +1,6 @@
 #include <regex>
 #include "metadata.h"
+#include "psflib.h"
 
 TrackMetadata::TrackMetadata()
   : Length(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment("") {}
@@ -38,4 +39,11 @@ int64_t parse_time(const char *input) {
   int64_t total_ms = milliseconds + 1000*seconds + 60*1000*minutes + 60*60*1000*hours;
   
   return total_ms;
+}
+
+int load_metadata(const char *uri, TrackMetadata *metadata) {
+  if (psf_load(uri, &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
+               metadata, 0, nullptr, nullptr) != GSF_VERSION) 
+    return -1;
+  return 0;
 }
