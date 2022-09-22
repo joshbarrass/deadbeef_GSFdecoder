@@ -6,7 +6,10 @@
 
 #include <iostream>
 
-PluginState::PluginState() : fInit(false), hints(0), fMetadata(), ROM(), entry_point(0), set_entry(false) {}
+// plugin state will often occupy the same memory as a previous state,
+// must be careful to ensure everything is properly initialised to
+// avoid segfaults
+PluginState::PluginState() : fFileInfo(), fInit(false), hints(0), fMetadata(), output(), ROM(), entry_point(0), set_entry(false), fEmulator() {}
 
 PluginState::~PluginState() {
   if (fInit) {
@@ -14,14 +17,12 @@ PluginState::~PluginState() {
     CPUCleanUp(&fEmulator);
     fInit = false;
   }
-  fEmulator.~GBASystem();
+  // fEmulator.~GBASystem();
 }
 
 //
 
 static DB_decoder_t *plugin;
-
-static PluginState state = PluginState();
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 
@@ -31,20 +32,4 @@ DB_decoder_t *get_plugin_pointer() {
 
 void set_plugin_pointer(DB_decoder_t *ptr) {
   plugin = ptr;
-}
-
-void initialise_plugin_state() {
-  // source: https://stackoverflow.com/a/2166155/7471232
-  // deconstruct and completely reinitialise the plugin state
-  // cannot just use
-  //    state = PluginState()
-  // here as this produces:
-  //    ...is implicitly deleted because the default definition would be ill-formed
-  // see https://stackoverflow.com/a/49826562/7471232
-  state.~PluginState();
-  new(&state) PluginState();
-}
-
-PluginState *get_plugin_state() {
-  return &state;
 }
