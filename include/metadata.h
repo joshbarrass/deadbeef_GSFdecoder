@@ -24,4 +24,7 @@ struct TrackMetadata {
 
 int64_t parse_time(const char *input);
 
+// returns negative on failure
+int load_metadata(const char *uri, TrackMetadata *metadata);
+
 #endif

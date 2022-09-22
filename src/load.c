@@ -44,6 +44,5 @@ static DB_decoder_t plugin = {
 DB_plugin_t *GSFdecoder_load(DB_functions_t *api) {
   set_API_pointer(api);
   set_plugin_pointer(&plugin);
-  initialise_plugin_state();
   return DB_PLUGIN(&plugin);
 }

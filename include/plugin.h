@@ -10,8 +10,6 @@ extern "C" {
   DB_decoder_t *get_plugin_pointer();
   void set_plugin_pointer(DB_decoder_t *);
 
-  void initialise_plugin_state();
-
 #ifdef __cplusplus
 }
 #endif
@@ -27,8 +25,8 @@ struct PluginState {
   PluginState();
   ~PluginState();
 
-  bool fInit;
   DB_fileinfo_t fFileInfo;
+  bool fInit;
   uint32_t hints;
   TrackMetadata fMetadata;
   GSFSoundOut output;
@@ -37,8 +35,6 @@ struct PluginState {
   bool set_entry;
   GBASystem fEmulator;
 };
-
-PluginState *get_plugin_state();
 
 #endif
 

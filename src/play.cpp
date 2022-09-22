@@ -5,6 +5,7 @@
 #include "api.h"
 #include "psflib/psflib.h"
 #include "psflib.h"
+#include "metadata.h"
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 #define tracedbg(...) { deadbeef->log_detailed (&plugin->plugin, 1, __VA_ARGS__); }
@@ -12,6 +13,10 @@
 #ifdef STDERR_DEBUGGING
 #include <iostream>
 #endif
+
+inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
+  return (PluginState*)_info;
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +26,12 @@ extern "C" {
 // provides deadbeef with somewhere to put the file info
 // file info will be stored in the PluginState
 DB_fileinfo_t *gsf_open(uint32_t hints) {
-  PluginState *state = get_plugin_state();
+  PluginState *state = new PluginState();
+  #ifdef BUILD_DEBUG
+  auto deadbeef = get_API_pointer();
+  auto plugin = get_plugin_pointer();
+  tracedbg("GSF DEBUG: made new plugin state (%X)\n", state);
+  #endif
   state->hints = hints;
   return &(state->fFileInfo);
 }
@@ -32,7 +42,7 @@ DB_fileinfo_t *gsf_open(uint32_t hints) {
 int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
-  PluginState *state = get_plugin_state();
+  PluginState *state = get_plugin_state(info);
 
   #ifdef BUILD_DEBUG
   if (state->hints & DDB_DECODER_HINT_CAN_LOOP) {
@@ -53,10 +63,9 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   std::string uri(deadbeef->pl_find_meta (it, ":URI"));
   deadbeef->pl_unlock ();
 
-  // if we read metadata again here, this populates the length fields etc.
-  if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
-               state, 0, nullptr, nullptr) != GSF_VERSION) {
-    trace("GSF ERR: failed to load GSF metadata\n");
+  // read metadata again here to populate the context struct
+  if (load_metadata(uri.c_str(), &state->fMetadata) < 0) {
+    trace("GSF ERR: (init) failed to load GSF metadata\n");
     return -1;
   }
 
@@ -98,15 +107,30 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
 }
 
 void gsf_free(DB_fileinfo_t *_info) {
-  initialise_plugin_state();
+  PluginState* state = get_plugin_state(_info);
+  #ifdef BUILD_DEBUG
+  auto deadbeef = get_API_pointer();
+  auto plugin = get_plugin_pointer();
+  #endif
+  if (state) {
+    delete state;
+    #ifdef BUILD_DEBUG
+    tracedbg("GSF DEBUG: freed state (%X)\n", state);
+    #endif
+  }
 }
 
 int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
-  PluginState *state = get_plugin_state();
+  PluginState *state = get_plugin_state(_info);
 
-  #ifdef BUILD_DEBUG
+  if (!state->fInit) {
+    trace("GSF ERR: attempt to read from uninitialised plugin state\n");
+    return -1;
+  }
+
+#ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: readpos: %d, length: %d\n", _info->readpos, state->fMetadata.Length / 1000);
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
@@ -172,7 +196,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 int gsf_seek(DB_fileinfo_t *info, float seconds) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
-  PluginState *state = get_plugin_state();
+  PluginState *state = get_plugin_state(info);
 
   // cannot emulate backwards; only option is to restart the emulator
   if (info->readpos > seconds) {
@@ -232,25 +256,16 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
                       const char *fname) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
-  PluginState *state = get_plugin_state();
-  // clear the metadata in the current state, else this can lead to
-  // tracks with unspecified tags inheriting those tags from the last
-  // played track
-  // TODO: hopefully this will not be necessary once the state is
-  // stored around the DB_fileinfo_t context
-  state->fMetadata = TrackMetadata();
-  
-  std::string uri(fname);
-  if (psf_load(uri.c_str(), &psf_file_functions, GSF_VERSION, 0, 0, gsf_info_callback,
-               state, 0, nullptr, nullptr) != GSF_VERSION) {
-    trace("GSF ERR: failed to load GSF metadata\n");
-    return nullptr;
-  }
 
   DB_playItem_t *it = deadbeef->pl_item_alloc_init(fname, plugin->plugin.id);
   deadbeef->pl_add_meta(it, ":FILETYPE", "GSF");
 
-  TrackMetadata &meta = state->fMetadata;
+  TrackMetadata meta = TrackMetadata();
+  if (load_metadata(fname, &meta) < 0) {
+    trace("GSF ERR: (insert) failed to load GSF metadata\n");
+    return nullptr;
+  }
+
   if (meta.Title.length() > 0) {
     deadbeef->pl_add_meta(it, "title", meta.Title.c_str());
   }

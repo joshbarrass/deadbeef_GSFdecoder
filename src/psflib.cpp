@@ -163,22 +163,22 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
 
 // metadata callback for psflib
 int gsf_info_callback(void *context, const char *name, const char *value) {
-  PluginState *state = (PluginState*)context;
+  TrackMetadata *meta = (TrackMetadata*)context;
 
   if (!strcasecmp(name, "length")) {
-    state->fMetadata.Length = parse_time(value);
+    meta->Length = parse_time(value);
   } else if (!strcasecmp(name, "fade")) {
-    state->fMetadata.Fadeout = parse_time(value);
+    meta->Fadeout = parse_time(value);
   } else if (!strcasecmp(name, "title")) {
-    state->fMetadata.Title = value;
+    meta->Title = value;
   } else if (!strcasecmp(name, "artist")) {
-    state->fMetadata.Artist = value;
+    meta->Artist = value;
   } else if (!strcasecmp(name, "year")) {
-    state->fMetadata.Year = value;
+    meta->Year = value;
   } else if (!strcasecmp(name, "game")) {
-    state->fMetadata.Game = value;
+    meta->Game = value;
   } else if (!strcasecmp(name, "comment")) {
-    state->fMetadata.Comment = value;
+    meta->Comment = value;
   }
 
   return 0;
