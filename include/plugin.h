@@ -27,8 +27,8 @@ struct PluginState {
   PluginState();
   ~PluginState();
 
-  bool fInit;
   DB_fileinfo_t fFileInfo;
+  bool fInit;
   uint32_t hints;
   TrackMetadata fMetadata;
   GSFSoundOut output;
