@@ -185,15 +185,23 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
     meta->Comment = value;
   // explicit matching for replaygain to accommodate different
   // standards
-  else if (!strcasecmp(name, "replaygain_album_gain") || !strcasecmp(name, "replaygain_albumgain"))
-    meta->RG_AGAIN = value;
-  else if (!strcasecmp(name, "replaygain_album_peak") || !strcasecmp(name, "replaygain_albumpeak"))
-    meta->RG_APEAK = value;
-  else if (!strcasecmp(name, "replaygain_track_gain") || !strcasecmp(name, "replaygain_trackgain"))
-    meta->RG_TGAIN = value;
-  else if (!strcasecmp(name, "replaygain_track_peak") || !strcasecmp(name, "replaygain_trackpeak"))
-    meta->RG_TPEAK = value;
-  else
+  else if (!strcasecmp(name, "replaygain_album_gain") ||
+           !strcasecmp(name, "replaygain_albumgain")) {
+    if (!parse_rg_gain(value, meta->RG_AGAIN))
+      meta->set_RG_album = true;
+  } else if (!strcasecmp(name, "replaygain_album_peak") ||
+             !strcasecmp(name, "replaygain_albumpeak")) {
+    if (!parse_rg_peak(value, meta->RG_APEAK))
+      meta->set_RG_album = true;
+  } else if (!strcasecmp(name, "replaygain_track_gain") ||
+             !strcasecmp(name, "replaygain_trackgain")) {
+    if (!parse_rg_gain(value, meta->RG_TGAIN))
+      meta->set_RG_track = true;
+  } else if (!strcasecmp(name, "replaygain_track_peak") ||
+             !strcasecmp(name, "replaygain_trackpeak")) {
+    if (!parse_rg_peak(value, meta->RG_TPEAK))
+      meta->set_RG_track = true;
+  } else
     meta->OtherMeta[name] = value;
 
   return 0;
