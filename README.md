@@ -12,19 +12,27 @@ Ensure that when you clone this repository, you clone recursively to download th
 git clone --recursive https://github.com/joshbarrass/deadbeef_GSFdecoder
 cd deadbeef_GSFdecoder
 mkdir build && cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
 By defualt, running `make install` will then install the plugin to `/opt/deadbeef/lib/deadbeef` (global install). If this is not correct, replace the fourth line above with:
 
 ```
-cmake -DCMAKE_INSTALL_PREFIX=<path> .. 
+cmake -DCMAKE_INSTALL_PREFIX=<path> -DCMAKE_BUILD_TYPE=Release .. 
 ```
 
 where `<path>` is the target path you want to install to. If you wish to install the plugin for your user only, you can set this to `$HOME/.local/lib/deadbeef/`. You should be able to run this command at any time without having to completely recompile the plugin.
 
 If you wish to install the plugin manually, simply copy the `GSFdecoder.so` to one of DeaDBeeF's library paths (probably either `/opt/deadbeef/lib/deadbeef` or `$HOME/.local/lib/deadbeef/`).
+
+### Enabling Logging
+
+If you are encountering any errors with the plugin, it may be helpful to enable logging to figure out what error, if any, is occurring. Currently, logging can only be toggled at compile time. To do so, add the `-DENABLE_LOGGING=ON` switch to your cmake command and recompile.
+
+### Debug Builds
+
+If you want to compile a debug build, just change the CMake build type to `Debug`. Be warned, however, that debug builds have considerably more verbose logging, which is ordinarily disabled in a regular build.
 
 ## Credit
 
