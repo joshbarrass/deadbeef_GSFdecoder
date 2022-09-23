@@ -165,21 +165,44 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
 int gsf_info_callback(void *context, const char *name, const char *value) {
   TrackMetadata *meta = (TrackMetadata*)context;
 
-  if (!strcasecmp(name, "length")) {
+  if (name[0] == '_')
+    // ignore -- we don't want the _lib entries showing up, as they
+    // are internal use only
+    return 0;
+  else if (!strcasecmp(name, "length"))
     meta->Length = parse_time(value);
-  } else if (!strcasecmp(name, "fade")) {
+  else if (!strcasecmp(name, "fade"))
     meta->Fadeout = parse_time(value);
-  } else if (!strcasecmp(name, "title")) {
+  else if (!strcasecmp(name, "title"))
     meta->Title = value;
-  } else if (!strcasecmp(name, "artist")) {
+  else if (!strcasecmp(name, "artist"))
     meta->Artist = value;
-  } else if (!strcasecmp(name, "year")) {
+  else if (!strcasecmp(name, "year"))
     meta->Year = value;
-  } else if (!strcasecmp(name, "game")) {
+  else if (!strcasecmp(name, "game"))
     meta->Game = value;
-  } else if (!strcasecmp(name, "comment")) {
+  else if (!strcasecmp(name, "comment"))
     meta->Comment = value;
-  }
+  // explicit matching for replaygain to accommodate different
+  // standards
+  else if (!strcasecmp(name, "replaygain_album_gain") ||
+           !strcasecmp(name, "replaygain_albumgain")) {
+    if (!parse_rg_gain(value, meta->RG_AGAIN))
+      meta->set_RG_album = true;
+  } else if (!strcasecmp(name, "replaygain_album_peak") ||
+             !strcasecmp(name, "replaygain_albumpeak")) {
+    if (!parse_rg_peak(value, meta->RG_APEAK))
+      meta->set_RG_album = true;
+  } else if (!strcasecmp(name, "replaygain_track_gain") ||
+             !strcasecmp(name, "replaygain_trackgain")) {
+    if (!parse_rg_gain(value, meta->RG_TGAIN))
+      meta->set_RG_track = true;
+  } else if (!strcasecmp(name, "replaygain_track_peak") ||
+             !strcasecmp(name, "replaygain_trackpeak")) {
+    if (!parse_rg_peak(value, meta->RG_TPEAK))
+      meta->set_RG_track = true;
+  } else
+    meta->OtherMeta[name] = value;
 
   return 0;
 }

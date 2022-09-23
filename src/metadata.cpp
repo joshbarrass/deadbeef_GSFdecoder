@@ -3,7 +3,10 @@
 #include "psflib.h"
 
 TrackMetadata::TrackMetadata()
-  : Length(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment("") {}
+  : Length(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment(""), set_RG_album(false), RG_AGAIN(0), RG_APEAK(1), set_RG_track(false), RG_TGAIN(0), RG_TPEAK(1) {
+  // explicitly clear the map to avoid any issues with reused memory
+  OtherMeta.clear();
+}
 
 TrackMetadata::~TrackMetadata() {}
 
@@ -39,6 +42,32 @@ int64_t parse_time(const char *input) {
   int64_t total_ms = milliseconds + 1000*seconds + 60*1000*minutes + 60*60*1000*hours;
   
   return total_ms;
+}
+
+const std::regex replaygain_gain_regex("^([+-]?\\d+(?:\\.(?:\\d+)*)?) dB$");
+const std::regex replaygain_peak_regex("^([+-]?\\d+(?:\\.(?:\\d+)*)?)$");
+int parse_rg_gain(const char *input, float &output) {
+  if (!input) {
+    return -1;
+  }
+  std::cmatch match;
+  if (!std::regex_match(input, match, replaygain_gain_regex)) {
+    return -2;
+  }
+  output = std::stof(match[1].str().c_str());
+  return 0;
+}
+
+int parse_rg_peak(const char *input, float &output) {
+  if (!input) {
+    return -1;
+  }
+  std::cmatch match;
+  if (!std::regex_match(input, match, replaygain_peak_regex)) {
+    return -2;
+  }
+  output = std::stof(match[1].str().c_str());
+  return 0;
 }
 
 int load_metadata(const char *uri, TrackMetadata *metadata) {

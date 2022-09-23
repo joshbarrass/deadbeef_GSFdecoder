@@ -282,6 +282,21 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
     deadbeef->pl_add_meta(it, "comment", meta.Comment.c_str());
   }
 
+  // add replaygain
+  if (meta.set_RG_album) {
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_ALBUMGAIN, meta.RG_AGAIN);
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_ALBUMPEAK, meta.RG_APEAK);
+  }
+  if (meta.set_RG_track) {
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_TRACKGAIN, meta.RG_TGAIN);
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_TRACKPEAK, meta.RG_TPEAK);
+  }
+
+  // add others
+  for (auto itr = meta.OtherMeta.begin(); itr != meta.OtherMeta.end(); ++itr) {
+    deadbeef->pl_add_meta(it, itr->first.c_str(), itr->second.c_str());
+  }
+
   float total_duration = (float)meta.Length/1000.;
   deadbeef->plt_set_item_duration(plt, it, total_duration);
 
