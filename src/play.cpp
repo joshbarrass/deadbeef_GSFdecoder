@@ -283,18 +283,13 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
   }
 
   // add replaygain
-  // TODO: parse the replaygain meta and use pl_set_item_replaygain
-  if (meta.RG_AGAIN.length() > 0) {
-    deadbeef->pl_add_meta(it, "REPLAYGAIN_ALBUMGAIN", meta.RG_AGAIN.c_str());
+  if (meta.set_RG_album) {
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_ALBUMGAIN, meta.RG_AGAIN);
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_ALBUMPEAK, meta.RG_APEAK);
   }
-  if (meta.RG_APEAK.length() > 0) {
-    deadbeef->pl_add_meta(it, "REPLAYGAIN_ALBUMPEAK", meta.RG_APEAK.c_str());
-  }
-  if (meta.RG_TGAIN.length() > 0) {
-    deadbeef->pl_add_meta(it, "REPLAYGAIN_TRACKGAIN", meta.RG_TGAIN.c_str());
-  }
-  if (meta.RG_TPEAK.length() > 0) {
-    deadbeef->pl_add_meta(it, "REPLAYGAIN_TRACKPEAK", meta.RG_TPEAK.c_str());
+  if (meta.set_RG_track) {
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_TRACKGAIN, meta.RG_TGAIN);
+    deadbeef->pl_set_item_replaygain(it, DDB_REPLAYGAIN_TRACKPEAK, meta.RG_TPEAK);
   }
 
   // add others
