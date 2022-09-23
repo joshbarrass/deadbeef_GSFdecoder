@@ -179,6 +179,8 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
     meta->Game = value;
   } else if (!strcasecmp(name, "comment")) {
     meta->Comment = value;
+  } else {
+    meta->OtherMeta[name] = value;
   }
 
   return 0;

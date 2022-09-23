@@ -3,7 +3,10 @@
 #include "psflib.h"
 
 TrackMetadata::TrackMetadata()
-  : Length(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment("") {}
+  : Length(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment("") {
+  // explicitly clear the map to avoid any issues with reused memory
+  OtherMeta.clear();
+}
 
 TrackMetadata::~TrackMetadata() {}
 
