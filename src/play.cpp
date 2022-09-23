@@ -282,6 +282,11 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
     deadbeef->pl_add_meta(it, "comment", meta.Comment.c_str());
   }
 
+  // add others
+  for (auto itr = meta.OtherMeta.begin(); itr != meta.OtherMeta.end(); ++itr) {
+    deadbeef->pl_add_meta(it, itr->first.c_str(), itr->second.c_str());
+  }
+
   float total_duration = (float)meta.Length/1000.;
   deadbeef->plt_set_item_duration(plt, it, total_duration);
 
