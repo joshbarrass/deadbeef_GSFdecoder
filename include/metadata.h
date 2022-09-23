@@ -16,6 +16,11 @@ struct TrackMetadata {
   std::string Year;
   std::string Game;
   std::string Comment;
+  // explicit replaygain tags
+  std::string RG_AGAIN;
+  std::string RG_APEAK;
+  std::string RG_TGAIN;
+  std::string RG_TPEAK;
   // generic tags
   std::unordered_map<std::string, std::string> OtherMeta;
 };
