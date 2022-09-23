@@ -165,23 +165,22 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
 int gsf_info_callback(void *context, const char *name, const char *value) {
   TrackMetadata *meta = (TrackMetadata*)context;
 
-  if (!strcasecmp(name, "length")) {
+  if (!strcasecmp(name, "length"))
     meta->Length = parse_time(value);
-  } else if (!strcasecmp(name, "fade")) {
+  else if (!strcasecmp(name, "fade"))
     meta->Fadeout = parse_time(value);
-  } else if (!strcasecmp(name, "title")) {
+  else if (!strcasecmp(name, "title"))
     meta->Title = value;
-  } else if (!strcasecmp(name, "artist")) {
+  else if (!strcasecmp(name, "artist"))
     meta->Artist = value;
-  } else if (!strcasecmp(name, "year")) {
+  else if (!strcasecmp(name, "year"))
     meta->Year = value;
-  } else if (!strcasecmp(name, "game")) {
+  else if (!strcasecmp(name, "game"))
     meta->Game = value;
-  } else if (!strcasecmp(name, "comment")) {
+  else if (!strcasecmp(name, "comment"))
     meta->Comment = value;
-  } else {
+  else
     meta->OtherMeta[name] = value;
-  }
 
   return 0;
 }
