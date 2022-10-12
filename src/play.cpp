@@ -131,13 +131,13 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   }
 
 #ifdef BUILD_DEBUG
-  tracedbg("GSF DEBUG: readpos: %d, length: %d\n", _info->readpos, state->fMetadata.Length / 1000);
+  tracedbg("GSF DEBUG: readsample: %d, length: %d\n", state->readsample, state->fMetadata.LengthSamples);
   #ifdef STDERR_DEBUGGING
-  std::cerr << "GSF DEBUG: readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
+  std::cerr << "GSF DEBUG: readsample: " << state->readsample << ", length: " << state->fMetadata.LengthSamples << std::endl;
   #endif
   #endif
   if (!(deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) || !(state->hints & DDB_DECODER_HINT_CAN_LOOP)) {
-    if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
+    if (state->readsample >= (float)state->fMetadata.LengthSamples) {
 #ifdef BUILD_DEBUG
       tracedbg("GSF DEBUG: end of track\n");
 #endif
@@ -177,6 +177,11 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: Must copy " << to_copy << " bytes" << std::endl;
   #endif
   #endif
+  // if we would copy more samples than the length of the file, we
+  // need to trim the buffer
+  size_t remaining_samples = state->fMetadata.LengthSamples - state->readsample;
+  if (to_copy > remaining_samples)
+    to_copy = remaining_samples;
   unsigned char *head_sample = &state->output.sample_buffer[0];
   std::copy(head_sample, head_sample+to_copy, buffer);
 
@@ -194,6 +199,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 
   // 16-bit samples, stereo, so 4 bytes per sample
   // 44100 samples per second
+  state->readsample += nbytes / 4;
   _info->readpos += (float)nbytes / 44100 / 4;
 
   return to_copy;
@@ -208,6 +214,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
   if (info->readpos > seconds) {
     CPUReset(&state->fEmulator);
     info->readpos = 0;
+    state->readsample = 0;
   }
 
   float to_seek = seconds - info->readpos;
@@ -231,6 +238,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
         #endif
         #endif
         // discard the entire buffer if there's less data than we need
+        state->readsample += in_buffer / 4;
         in_buffer = 0;
         to_seek -= seconds_in_buffer;
         continue;
@@ -246,6 +254,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
       std::copy(head_sample + bytes_needed,
                 head_sample + in_buffer,
                 head_sample);
+      state->readsample += in_buffer / 4;
       in_buffer -= bytes_needed;
       to_seek = 0;
       break;

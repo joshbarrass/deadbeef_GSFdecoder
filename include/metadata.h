@@ -10,6 +10,7 @@ struct TrackMetadata {
   ~TrackMetadata();
 
   int64_t Length; // milliseconds
+  int64_t  LengthSamples;
   int64_t Fadeout;
   std::string Title;
   std::string Artist;
