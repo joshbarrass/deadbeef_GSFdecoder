@@ -131,9 +131,9 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   }
 
 #ifdef BUILD_DEBUG
-  tracedbg("GSF DEBUG: readpos: %d, length: %d\n", _info->readpos, state->fMetadata.Length / 1000);
+  tracedbg("GSF DEBUG: readsample: %d, length: %d\n", state->readsample, state->fMetadata.LengthSamples);
   #ifdef STDERR_DEBUGGING
-  std::cerr << "GSF DEBUG: readpos: " << _info->readpos << ", length: " << state->fMetadata.Length / 1000 << std::endl;
+  std::cerr << "GSF DEBUG: readsample: " << state->readsample << ", length: " << state->fMetadata.LengthSamples << std::endl;
   #endif
   #endif
   if (!(deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) || !(state->hints & DDB_DECODER_HINT_CAN_LOOP)) {
