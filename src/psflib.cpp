@@ -172,8 +172,8 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
     // are internal use only
     return 0;
   else if (!strcasecmp(name, "length")) {
-    meta->Length = parse_time(value);
-    meta->LengthSamples = 44100 * meta->Length;
+    meta->Length = parse_time(value); // milliseconds
+    meta->LengthSamples = 44100 * meta->Length / 1000;
   } else if (!strcasecmp(name, "fade"))
     meta->Fadeout = parse_time(value);
   else if (!strcasecmp(name, "title"))
