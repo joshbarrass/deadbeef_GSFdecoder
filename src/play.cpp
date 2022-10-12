@@ -177,6 +177,11 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: Must copy " << to_copy << " bytes" << std::endl;
   #endif
   #endif
+  // if we would copy more samples than the length of the file, we
+  // need to trim the buffer
+  size_t remaining_samples = state->fMetadata.LengthSamples - state->readsample;
+  if (to_copy > remaining_samples)
+    to_copy = remaining_samples;
   unsigned char *head_sample = &state->output.sample_buffer[0];
   std::copy(head_sample, head_sample+to_copy, buffer);
 
