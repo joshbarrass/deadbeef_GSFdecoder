@@ -199,8 +199,8 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 
   // 16-bit samples, stereo, so 4 bytes per sample
   // 44100 samples per second
-  state->readsample += nbytes / 4;
-  _info->readpos += (float)nbytes / 44100 / 4;
+  state->readsample += to_copy / 4;
+  _info->readpos += (float)to_copy / 44100 / 4;
 
   return to_copy;
 }
@@ -254,7 +254,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
       std::copy(head_sample + bytes_needed,
                 head_sample + in_buffer,
                 head_sample);
-      state->readsample += in_buffer / 4;
+      state->readsample += bytes_needed / 4;
       in_buffer -= bytes_needed;
       to_seek = 0;
       break;
