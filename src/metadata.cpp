@@ -3,7 +3,7 @@
 #include "psflib.h"
 
 TrackMetadata::TrackMetadata()
-  : Length(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment(""), set_RG_album(false), RG_AGAIN(0), RG_APEAK(1), set_RG_track(false), RG_TGAIN(0), RG_TPEAK(1) {
+  : Length(0), LengthSamples(0), Fadeout(0), Title(""), Artist(""), Year(""), Game(""), Comment(""), set_RG_album(false), RG_AGAIN(0), RG_APEAK(1), set_RG_track(false), RG_TGAIN(0), RG_TPEAK(1) {
   // explicitly clear the map to avoid any issues with reused memory
   OtherMeta.clear();
 }
