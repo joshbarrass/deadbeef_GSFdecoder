@@ -161,7 +161,13 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #endif
 
   while (state->output.bytes_in_buffer < nbytes) {
+    #ifdef BUILD_DEBUG
+    int old_size = state->output.bytes_in_buffer;
+    #endif
     CPULoop(&state->fEmulator, 250000);
+    #ifdef BUILD_DEBUG
+    tracedbg("GSF DEBUG: emulator yielded %d bytes\n", state->output.bytes_in_buffer - old_size);
+    #endif
   }
 
   size_t to_copy = std::min(nbytes, (int)(state->output.bytes_in_buffer));
