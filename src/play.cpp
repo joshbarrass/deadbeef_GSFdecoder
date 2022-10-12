@@ -137,7 +137,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #endif
   #endif
   if (!(deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) || !(state->hints & DDB_DECODER_HINT_CAN_LOOP)) {
-    if (_info->readpos >= (float)state->fMetadata.Length / 1000) {
+    if (state->readsample >= (float)state->fMetadata.LengthSamples) {
 #ifdef BUILD_DEBUG
       tracedbg("GSF DEBUG: end of track\n");
 #endif
