@@ -161,6 +161,8 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   return 0;
 }
 
+constexpr int sample_rate = 44100; // samples per second
+
 // metadata callback for psflib
 int gsf_info_callback(void *context, const char *name, const char *value) {
   TrackMetadata *meta = (TrackMetadata*)context;
@@ -169,9 +171,10 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
     // ignore -- we don't want the _lib entries showing up, as they
     // are internal use only
     return 0;
-  else if (!strcasecmp(name, "length"))
+  else if (!strcasecmp(name, "length")) {
     meta->Length = parse_time(value);
-  else if (!strcasecmp(name, "fade"))
+    meta->LengthSamples = 44100 * meta->Length;
+  } else if (!strcasecmp(name, "fade"))
     meta->Fadeout = parse_time(value);
   else if (!strcasecmp(name, "title"))
     meta->Title = value;
