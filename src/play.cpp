@@ -194,6 +194,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 
   // 16-bit samples, stereo, so 4 bytes per sample
   // 44100 samples per second
+  state->readsample += nbytes / 4;
   _info->readpos += (float)nbytes / 44100 / 4;
 
   return to_copy;
@@ -208,6 +209,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
   if (info->readpos > seconds) {
     CPUReset(&state->fEmulator);
     info->readpos = 0;
+    state->readsample = 0;
   }
 
   float to_seek = seconds - info->readpos;
@@ -231,6 +233,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
         #endif
         #endif
         // discard the entire buffer if there's less data than we need
+        state->readsample += in_buffer / 4;
         in_buffer = 0;
         to_seek -= seconds_in_buffer;
         continue;
@@ -246,6 +249,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
       std::copy(head_sample + bytes_needed,
                 head_sample + in_buffer,
                 head_sample);
+      state->readsample += in_buffer / 4;
       in_buffer -= bytes_needed;
       to_seek = 0;
       break;
