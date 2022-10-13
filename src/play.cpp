@@ -136,7 +136,8 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: readsample: " << state->readsample << ", length: " << state->fMetadata.LengthSamples << std::endl;
   #endif
   #endif
-  if (!(deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) || !(state->hints & DDB_DECODER_HINT_CAN_LOOP)) {
+  bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
+  if (!should_loop) {
     if (state->readsample >= (float)state->fMetadata.LengthSamples) {
 #ifdef BUILD_DEBUG
       tracedbg("GSF DEBUG: end of track\n");
@@ -178,10 +179,14 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #endif
   #endif
   // if we would copy more samples than the length of the file, we
-  // need to trim the buffer
-  size_t remaining_samples = state->fMetadata.LengthSamples - state->readsample;
-  if (to_copy > remaining_samples)
-    to_copy = remaining_samples;
+  // need to trim the buffer, but ONLY if we aren't looping!
+  if (!should_loop) {
+    size_t remaining_samples =
+        state->fMetadata.LengthSamples - state->readsample;
+    if (to_copy > remaining_samples)
+      to_copy = remaining_samples;
+  }
+
   unsigned char *head_sample = &state->output.sample_buffer[0];
   std::copy(head_sample, head_sample+to_copy, buffer);
 
