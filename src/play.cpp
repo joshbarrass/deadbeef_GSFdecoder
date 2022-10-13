@@ -130,7 +130,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
     return -1;
   }
 
-#ifdef BUILD_DEBUG
+  #ifdef BUILD_DEBUG
   tracedbg("GSF DEBUG: readsample: %d, length: %d\n", state->readsample, state->fMetadata.LengthSamples);
   #ifdef STDERR_DEBUGGING
   std::cerr << "GSF DEBUG: readsample: " << state->readsample << ", length: " << state->fMetadata.LengthSamples << std::endl;
