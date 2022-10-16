@@ -31,15 +31,15 @@ int64_t parse_time(const char *input) {
   }
 
 #define to_str() str().c_str()
-  int milliseconds = atoi(match[MILLISECONDS].to_str());
-  int seconds = atoi(match[SECONDS].to_str());
-  int minutes = atoi(match[MINUTES].to_str());
-  int hours = atoi(match[HOURS].to_str());
+  double milliseconds = atoi(match[MILLISECONDS].to_str());
+  double seconds = atoi(match[SECONDS].to_str());
+  double minutes = atoi(match[MINUTES].to_str());
+  double hours = atoi(match[HOURS].to_str());
   while (milliseconds >= 1000) {
     milliseconds /= 10;
   }
 
-  int64_t total_ms = milliseconds + 1000*seconds + 60*1000*minutes + 60*60*1000*hours;
+  double total_ms = milliseconds + 1000*seconds + 60*1000*minutes + 60*60*1000*hours;
   
   return total_ms;
 }
