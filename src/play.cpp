@@ -18,6 +18,19 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
+inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginState *state) {
+  // if we would copy more samples than the length of the file, we
+  // need to trim the buffer, but ONLY if we aren't looping!
+  bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
+  if (!should_loop) {
+    size_t remaining_samples = state->fMetadata.LengthSamples - state->readsample;
+    if (to_copy > remaining_samples)
+      to_copy = remaining_samples;
+  }
+
+  return to_copy;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -178,14 +191,8 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: Must copy " << to_copy << " bytes" << std::endl;
   #endif
   #endif
-  // if we would copy more samples than the length of the file, we
-  // need to trim the buffer, but ONLY if we aren't looping!
-  if (!should_loop) {
-    size_t remaining_samples =
-        state->fMetadata.LengthSamples - state->readsample;
-    if (to_copy > remaining_samples)
-      to_copy = remaining_samples;
-  }
+
+  to_copy = adjust_track_end(deadbeef, to_copy, state);
 
   unsigned char *head_sample = &state->output.sample_buffer[0];
   std::copy(head_sample, head_sample+to_copy, buffer);
