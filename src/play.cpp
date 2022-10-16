@@ -18,6 +18,10 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
+inline int64_t total_length_samples(PluginState *state) {
+  return state->fMetadata.LengthSamples + state->fMetadata.FadeoutSamples;
+}
+
 inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const int64_t fadeout_start, const int64_t fadeout_samples) {
   if (sample_n < fadeout_start)
     return sample;
@@ -33,11 +37,11 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
   // need to trim the buffer, but ONLY if we aren't looping!
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
-    size_t remaining_samples = state->fMetadata.LengthSamples - state->readsample;
+    size_t remaining_samples = total_length_samples(state) - state->readsample;
     if (to_copy > remaining_samples)
       to_copy = remaining_samples;
 
-    const int64_t fadeout_start = state->fMetadata.LengthSamples - state->fMetadata.FadeoutSamples;
+    const int64_t fadeout_start = state->fMetadata.LengthSamples;
     const int64_t readsample = state->readsample;
     // each sample is 4 bytes with 2 bytes per channel
     // fadeout must be applied to each channel separately
@@ -176,7 +180,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #endif
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
-    if (state->readsample >= (float)state->fMetadata.LengthSamples) {
+    if (state->readsample >= total_length_samples(state)) {
 #ifdef BUILD_DEBUG
       tracedbg("GSF DEBUG: end of track\n");
 #endif
