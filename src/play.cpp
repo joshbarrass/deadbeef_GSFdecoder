@@ -18,6 +18,16 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
+inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const int64_t fadeout_start, const int64_t fadeout_samples) {
+  if (sample_n < fadeout_start)
+    return sample;
+
+  const int64_t x = sample_n - fadeout_start;
+  const double m = 1.0 / (double)(fadeout_samples);
+  double factor = 1 - m*x;
+  return factor * sample;
+}
+
 inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginState *state) {
   // if we would copy more samples than the length of the file, we
   // need to trim the buffer, but ONLY if we aren't looping!
@@ -26,6 +36,21 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
     size_t remaining_samples = state->fMetadata.LengthSamples - state->readsample;
     if (to_copy > remaining_samples)
       to_copy = remaining_samples;
+
+    const int64_t fadeout_start = state->fMetadata.LengthSamples - state->fMetadata.FadeoutSamples;
+    const int64_t readsample = state->readsample;
+    // each sample is 4 bytes with 2 bytes per channel
+    // fadeout must be applied to each channel separately
+    int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
+    // only apply the fadeout to the samples we will copy
+    // other samples will be moved down the buffer and the fadeout
+    // will be applied to those later if needed
+    for (int i = 0; i < to_copy/2; ++i) {
+      channel_samples[i] = linear_fade(channel_samples[i],
+                                       readsample + i,
+                                       fadeout_start,
+                                       state->fMetadata.FadeoutSamples);
+    }
   }
 
   return to_copy;
