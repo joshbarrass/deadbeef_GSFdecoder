@@ -22,6 +22,10 @@ inline int64_t total_length_samples(PluginState *state) {
   return state->fMetadata.LengthSamples + state->fMetadata.FadeoutSamples;
 }
 
+inline float total_length_seconds(const TrackMetadata &meta) {
+  return (float)(meta.Length + meta.Fadeout) / 1000.0;
+}
+
 inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const int64_t fadeout_start, const int64_t fadeout_samples) {
   if (sample_n < fadeout_start)
     return sample;
@@ -355,8 +359,7 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
     deadbeef->pl_add_meta(it, itr->first.c_str(), itr->second.c_str());
   }
 
-  float total_duration = (float)meta.Length/1000.;
-  deadbeef->plt_set_item_duration(plt, it, total_duration);
+  deadbeef->plt_set_item_duration(plt, it, total_length_seconds(meta));
 
   after = deadbeef->plt_insert_item(plt, after, it);
   deadbeef->pl_item_unref(it);
