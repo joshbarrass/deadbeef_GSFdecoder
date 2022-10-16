@@ -18,8 +18,8 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
-inline int64_t total_length_samples(PluginState *state) {
-  return state->fMetadata.LengthSamples + state->fMetadata.FadeoutSamples;
+inline int64_t total_length_samples(const TrackMetadata &meta) {
+  return meta.LengthSamples + meta.FadeoutSamples;
 }
 
 inline float total_length_seconds(const TrackMetadata &meta) {
@@ -43,7 +43,7 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
   // need to trim the buffer, but ONLY if we aren't looping!
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
-    size_t remaining_samples = total_length_samples(state) - state->readsample;
+    size_t remaining_samples = total_length_samples(state->fMetadata) - state->readsample;
     if (to_copy > remaining_samples)
       to_copy = remaining_samples;
 
@@ -186,7 +186,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #endif
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
-    if (state->readsample >= total_length_samples(state)) {
+    if (state->readsample >= total_length_samples(state->fMetadata)) {
 #ifdef BUILD_DEBUG
       tracedbg("GSF DEBUG: end of track\n");
 #endif
