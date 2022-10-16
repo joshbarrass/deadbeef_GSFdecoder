@@ -26,6 +26,8 @@ inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const i
   if (sample_n < fadeout_start)
     return sample;
 
+  // don't worry about x > fadeout_samples; this should never happen
+  // as any earlier checks will end the track before then
   const int64_t x = sample_n - fadeout_start;
   const double m = 1.0 / (double)(fadeout_samples);
   double factor = 1 - m*x;
