@@ -18,6 +18,54 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
+inline int64_t total_length_samples(const TrackMetadata &meta) {
+  return meta.LengthSamples + meta.FadeoutSamples;
+}
+
+inline float total_length_seconds(const TrackMetadata &meta) {
+  return (float)(meta.Length + meta.Fadeout) / 1000.0;
+}
+
+inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const int64_t fadeout_start, const int64_t fadeout_samples) {
+  if (sample_n < fadeout_start)
+    return sample;
+
+  // don't worry about x > fadeout_samples; this should never happen
+  // as any earlier checks will end the track before then
+  const int64_t x = sample_n - fadeout_start;
+  const double m = 1.0 / (double)(fadeout_samples);
+  double factor = 1 - m*x;
+  return factor * sample;
+}
+
+inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginState *state) {
+  // if we would copy more samples than the length of the file, we
+  // need to trim the buffer, but ONLY if we aren't looping!
+  bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
+  if (!should_loop) {
+    size_t remaining_samples = total_length_samples(state->fMetadata) - state->readsample;
+    if (to_copy > remaining_samples)
+      to_copy = remaining_samples;
+
+    const int64_t fadeout_start = state->fMetadata.LengthSamples;
+    const int64_t readsample = state->readsample;
+    // each sample is 4 bytes with 2 bytes per channel
+    // fadeout must be applied to each channel separately
+    int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
+    // only apply the fadeout to the samples we will copy
+    // other samples will be moved down the buffer and the fadeout
+    // will be applied to those later if needed
+    for (int i = 0; i < to_copy/2; ++i) {
+      channel_samples[i] = linear_fade(channel_samples[i],
+                                       readsample + i,
+                                       fadeout_start,
+                                       state->fMetadata.FadeoutSamples);
+    }
+  }
+
+  return to_copy;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -138,7 +186,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   #endif
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
-    if (state->readsample >= (float)state->fMetadata.LengthSamples) {
+    if (state->readsample >= total_length_samples(state->fMetadata)) {
 #ifdef BUILD_DEBUG
       tracedbg("GSF DEBUG: end of track\n");
 #endif
@@ -178,14 +226,8 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: Must copy " << to_copy << " bytes" << std::endl;
   #endif
   #endif
-  // if we would copy more samples than the length of the file, we
-  // need to trim the buffer, but ONLY if we aren't looping!
-  if (!should_loop) {
-    size_t remaining_samples =
-        state->fMetadata.LengthSamples - state->readsample;
-    if (to_copy > remaining_samples)
-      to_copy = remaining_samples;
-  }
+
+  to_copy = adjust_track_end(deadbeef, to_copy, state);
 
   unsigned char *head_sample = &state->output.sample_buffer[0];
   std::copy(head_sample, head_sample+to_copy, buffer);
@@ -317,8 +359,7 @@ DB_playItem_t *gsf_insert(ddb_playlist_t *plt, DB_playItem_t *after,
     deadbeef->pl_add_meta(it, itr->first.c_str(), itr->second.c_str());
   }
 
-  float total_duration = (float)meta.Length/1000.;
-  deadbeef->plt_set_item_duration(plt, it, total_duration);
+  deadbeef->plt_set_item_duration(plt, it, total_length_seconds(meta));
 
   after = deadbeef->plt_insert_item(plt, after, it);
   deadbeef->pl_item_unref(it);
