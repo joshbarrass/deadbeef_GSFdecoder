@@ -41,11 +41,22 @@ inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const i
   return factor * sample;
 }
 
+// used for determining a factor that reduces the signal to
+// A*lower_threshold after fadeout_samples
 inline const double log_fade_factor(const int64_t fadeout_samples, const double lower_threshold) {
   // s'(n) = f**n * s(n)
   // want f such that for n=fadeout_samples, f**n = lower_threshold
   // f = lower_threshold**(1/n)
   return pow(lower_threshold, (double)1.0/(double)fadeout_samples);
+}
+
+// used for determining a factor that reduces the signal to A*factor
+// after fadeout_samples/2
+inline const double log_fade_half_factor(const int64_t fadeout_samples, const double factor) {
+  // s'(n) = f**n * s(n)
+  // want f such that for n=fadeout_samples/2, f**n = factor
+  // f = factor**(2/fadeout_samples)
+  return pow(factor, (double)2.0/(double)fadeout_samples);
 }
 
 inline int16_t log_fade(const int16_t sample, const int64_t sample_n,
@@ -74,7 +85,7 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
     // fadeout must be applied to each channel separately
     int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
     #ifdef LOG_FADE
-    const double fadeout_factor = log_fade_factor(state->fMetadata.FadeoutSamples, 0.01);
+    const double fadeout_factor = log_fade_half_factor(state->fMetadata.FadeoutSamples, 0.25);
     #endif
     // only apply the fadeout to the samples we will copy
     // other samples will be moved down the buffer and the fadeout
