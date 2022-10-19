@@ -7,6 +7,9 @@
 #include "psflib.h"
 #include "metadata.h"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 #define tracedbg(...) { deadbeef->log_detailed (&plugin->plugin, 1, __VA_ARGS__); }
 
@@ -38,6 +41,24 @@ inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const i
   return factor * sample;
 }
 
+inline const double log_fade_factor(const int64_t fadeout_samples, const double lower_threshold) {
+  // s'(n) = f**n * s(n)
+  // want f such that for n=fadeout_samples, f**n = lower_threshold
+  // f = lower_threshold**(1/n)
+  return pow(lower_threshold, (double)1.0/(double)fadeout_samples);
+}
+
+inline int16_t log_fade(const int16_t sample, const int64_t sample_n,
+                        const int64_t fadeout_start,
+                        const double fadeout_factor) {
+  if (sample_n < fadeout_start)
+    return sample;
+
+  const double n = sample_n - fadeout_start;
+  const double f = pow(fadeout_factor, n);
+  return f * sample;
+}
+
 inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginState *state) {
   // if we would copy more samples than the length of the file, we
   // need to trim the buffer, but ONLY if we aren't looping!
@@ -52,14 +73,24 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
     // each sample is 4 bytes with 2 bytes per channel
     // fadeout must be applied to each channel separately
     int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
+    #ifdef LOG_FADE
+    const double fadeout_factor = log_fade_factor(state->fMetadata.FadeoutSamples, 0.01);
+    #endif
     // only apply the fadeout to the samples we will copy
     // other samples will be moved down the buffer and the fadeout
     // will be applied to those later if needed
     for (int i = 0; i < to_copy/2; ++i) {
+      #ifdef LOG_FADE
+      channel_samples[i] = log_fade(channel_samples[i],
+                                       readsample+i,
+                                       fadeout_start,
+                                       fadeout_factor);
+      #else
       channel_samples[i] = linear_fade(channel_samples[i],
                                        readsample + i,
                                        fadeout_start,
                                        state->fMetadata.FadeoutSamples);
+      #endif
     }
   }
 

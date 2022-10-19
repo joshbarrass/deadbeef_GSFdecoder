@@ -26,6 +26,11 @@ IF(STDERR_DEBUGGING)
   add_compile_definitions(STDERR_DEBUGGING=1)
 ENDIF()
 
+OPTION (LOG_FADE "Use a logarithmic fadeout instead of a linear fadeout" ON)
+IF(LOG_FADE)
+  add_compile_definitions(LOG_FADE=1)
+ENDIF()
+
 # add include dir
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/lib)
