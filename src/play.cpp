@@ -29,6 +29,7 @@ inline float total_length_seconds(const TrackMetadata &meta) {
   return (float)(meta.Length + meta.Fadeout) / 1000.0;
 }
 
+#ifndef LOG_FADE
 inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const int64_t fadeout_start, const int64_t fadeout_samples) {
   if (sample_n < fadeout_start)
     return sample;
@@ -40,7 +41,9 @@ inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const i
   double factor = 1 - m*x;
   return factor * sample;
 }
+#endif
 
+#ifdef LOG_FADE
 // used for determining a factor that reduces the signal to
 // A*lower_threshold after fadeout_samples
 inline const double log_fade_factor(const int64_t fadeout_samples, const double lower_threshold) {
@@ -69,6 +72,7 @@ inline int16_t log_fade(const int16_t sample, const int64_t sample_n,
   const double f = pow(fadeout_factor, n);
   return f * sample;
 }
+#endif
 
 inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginState *state) {
   // if we would copy more samples than the length of the file, we
