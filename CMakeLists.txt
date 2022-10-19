@@ -26,7 +26,7 @@ IF(STDERR_DEBUGGING)
   add_compile_definitions(STDERR_DEBUGGING=1)
 ENDIF()
 
-OPTION (LOG_FADE "Use a logarithmic fadeout instead of a linear fadeout" ON)
+OPTION (LOG_FADE "Use a logarithmic fadeout instead of a linear fadeout" OFF)
 IF(LOG_FADE)
   add_compile_definitions(LOG_FADE=1)
 ENDIF()
