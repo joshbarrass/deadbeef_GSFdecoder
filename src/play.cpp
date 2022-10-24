@@ -299,18 +299,23 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 }
 
 int gsf_seek(DB_fileinfo_t *info, float seconds) {
+  int sample = seconds * 44100;
+  return gsf_seek_sample(info, sample);
+}
+
+int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state(info);
 
   // cannot emulate backwards; only option is to restart the emulator
-  if (info->readpos > seconds) {
+  if (state->readsample > sample) {
     CPUReset(&state->fEmulator);
     info->readpos = 0;
     state->readsample = 0;
   }
 
-  float to_seek = seconds - info->readpos;
+  int to_seek = sample - state->readsample;
   size_t &in_buffer = state->output.bytes_in_buffer;
   while (to_seek > 0) {
     #ifdef BUILD_DEBUG
@@ -322,8 +327,8 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
     #endif
     #endif
     if (in_buffer > 0) {
-      float seconds_in_buffer = (float)in_buffer / 44100 / 4;
-      if (seconds_in_buffer <= to_seek) {
+      int samples_in_buffer = in_buffer / 4;
+      if (samples_in_buffer <= to_seek) {
         #ifdef BUILD_DEBUG
         tracedbg("GSF DEBUG: Discarding buffer\n");
         #ifdef STDERR_DEBUGGING
@@ -331,18 +336,20 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
         #endif
         #endif
         // discard the entire buffer if there's less data than we need
-        state->readsample += in_buffer / 4;
+        state->readsample += samples_in_buffer;
         in_buffer = 0;
-        to_seek -= seconds_in_buffer;
+        to_seek -= samples_in_buffer;
         continue;
       }
       // otherwise, drop as many bytes as we need for the needed seek
-      int bytes_needed = to_seek * 44100 * 4;
+      int bytes_needed = to_seek * 4;
       // must ensure the bytes_needed is sample-aligned i.e. must be a
       // multiple of 4. If it isn't, the music will break
-      while (bytes_needed % 4 != 0) {
-        bytes_needed += 1;
-      }
+      //
+      // guaranteed when sample-seeking
+      // while (bytes_needed % 4 != 0) {
+      //   bytes_needed += 1;
+      // }
       unsigned char *head_sample = &state->output.sample_buffer[0];
       std::copy(head_sample + bytes_needed,
                 head_sample + in_buffer,
@@ -356,7 +363,7 @@ int gsf_seek(DB_fileinfo_t *info, float seconds) {
       CPULoop(&state->fEmulator, 250000);
     }
   }
-  info->readpos = seconds;
+  info->readpos = (double)sample / 44100.0;
   return 0;
 }
 
