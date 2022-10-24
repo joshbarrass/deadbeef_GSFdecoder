@@ -6,6 +6,7 @@
 #include "psflib/psflib.h"
 #include "psflib.h"
 #include "metadata.h"
+#include "consts.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -148,7 +149,7 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
 
   info->fmt.bps = 16;
   info->fmt.channels = 2;
-  info->fmt.samplerate = deadbeef->conf_get_int ("synth.samplerate", 44100);
+  info->fmt.samplerate = deadbeef->conf_get_int ("synth.samplerate", SAMPLE_RATE);
   info->fmt.channelmask = info->fmt.channels == 1 ? DDB_SPEAKER_FRONT_LEFT : (DDB_SPEAKER_FRONT_LEFT | DDB_SPEAKER_FRONT_RIGHT);
   info->readpos = 0;
   info->plugin = plugin;
@@ -291,15 +292,15 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   state->output.bytes_in_buffer -= to_copy;
 
   // 16-bit samples, stereo, so 4 bytes per sample
-  // 44100 samples per second
+  // SAMPLE_RATE samples per second
   state->readsample += to_copy / 4;
-  _info->readpos += (float)to_copy / 44100 / 4;
+  _info->readpos += (float)to_copy / SAMPLE_RATE / 4;
 
   return to_copy;
 }
 
 int gsf_seek(DB_fileinfo_t *info, float seconds) {
-  int sample = seconds * 44100;
+  int sample = seconds * SAMPLE_RATE;
   return gsf_seek_sample(info, sample);
 }
 
@@ -360,7 +361,7 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
       CPULoop(&state->fEmulator, 250000);
     }
   }
-  info->readpos = (double)state->readsample / 44100.0;
+  info->readpos = (double)state->readsample / (double)SAMPLE_RATE;
   return 0;
 }
 

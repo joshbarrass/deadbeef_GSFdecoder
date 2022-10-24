@@ -10,6 +10,7 @@
 #include "api.h"
 #include "plugin.h"
 #include "metadata.h"
+#include "consts.h"
 
 #define trace(...) { deadbeef->log_detailed (&plugin->plugin, 0, __VA_ARGS__); }
 #define tracedbg(...) { deadbeef->log_detailed (&plugin->plugin, 1, __VA_ARGS__); }
@@ -161,8 +162,6 @@ int gsf_load_callback(void *context, const uint8_t *exe, size_t exe_size,
   return 0;
 }
 
-constexpr int sample_rate = 44100; // samples per second
-
 // metadata callback for psflib
 int gsf_info_callback(void *context, const char *name, const char *value) {
   TrackMetadata *meta = (TrackMetadata*)context;
@@ -173,10 +172,10 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
     return 0;
   else if (!strcasecmp(name, "length")) {
     meta->Length = parse_time(value); // milliseconds
-    meta->LengthSamples = 44100 * meta->Length / 1000;
+    meta->LengthSamples = SAMPLE_RATE * meta->Length / 1000;
   } else if (!strcasecmp(name, "fade")) {
     meta->Fadeout = parse_time(value); // milliseconds
-    meta->FadeoutSamples = 44100 * meta->Fadeout / 1000;
+    meta->FadeoutSamples = SAMPLE_RATE * meta->Fadeout / 1000;
   } else if (!strcasecmp(name, "title"))
     meta->Title = value;
   else if (!strcasecmp(name, "artist"))
