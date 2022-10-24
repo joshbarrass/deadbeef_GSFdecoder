@@ -186,6 +186,7 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
     return -3;
   }
   soundInit(&state->fEmulator, &state->output);
+  soundSetSampleRate(&state->fEmulator, SAMPLE_RATE);
   soundReset(&state->fEmulator);
   CPUInit(&state->fEmulator);
   CPUReset(&state->fEmulator);
