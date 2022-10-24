@@ -37,6 +37,7 @@ static DB_decoder_t plugin = {
     .free = gsf_free,
     .read = gsf_read,
     .seek = gsf_seek,
+    .seek_sample = gsf_seek_sample,
     .insert = gsf_insert,
     .exts = exts,
 };
