@@ -336,6 +336,10 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
         #endif
         #endif
         // discard the entire buffer if there's less data than we need
+        //
+        // updating readsample as we go is not strictly necessary, so
+        // could be optimised out if necessary, but guarantees the
+        // value reflects the true state of the plugin
         state->readsample += samples_in_buffer;
         in_buffer = 0;
         to_seek -= samples_in_buffer;
@@ -343,13 +347,6 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
       }
       // otherwise, drop as many bytes as we need for the needed seek
       int bytes_needed = to_seek * 4;
-      // must ensure the bytes_needed is sample-aligned i.e. must be a
-      // multiple of 4. If it isn't, the music will break
-      //
-      // guaranteed when sample-seeking
-      // while (bytes_needed % 4 != 0) {
-      //   bytes_needed += 1;
-      // }
       unsigned char *head_sample = &state->output.sample_buffer[0];
       std::copy(head_sample + bytes_needed,
                 head_sample + in_buffer,
@@ -363,7 +360,7 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
       CPULoop(&state->fEmulator, 250000);
     }
   }
-  info->readpos = (double)sample / 44100.0;
+  info->readpos = (double)state->readsample / 44100.0;
   return 0;
 }
 
