@@ -31,6 +31,12 @@ IF(LOG_FADE)
   add_compile_definitions(LOG_FADE=1)
 ENDIF()
 
+SET (SAMPLE_RATE "44100" CACHE STRING "Set the sample rate to be used for playback")
+IF(SAMPLE_RATE)
+  add_compile_definitions(PLAYBACK_RATE=${SAMPLE_RATE})
+  message("-- Sample rate set to ${SAMPLE_RATE}Hz")
+ENDIF()
+
 # add include dir
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/lib)
