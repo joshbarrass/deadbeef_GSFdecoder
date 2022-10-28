@@ -3,8 +3,12 @@
 #include "deadbeef/deadbeef.h"
 #include "api.h"
 #include "plugin.h"
-
 #include "play.h"
+#include "consts.h"
+
+// used for injecting definitions into string literals
+#define STRINGIFY(x) #x
+#define EXPAND(x) STRINGIFY(x)
 
 DB_plugin_t* GSFdecoder_load (DB_functions_t *api);
 
@@ -22,7 +26,27 @@ static DB_decoder_t plugin = {
     .plugin.type = DB_PLUGIN_DECODER,
     .plugin.id = "gsfdecoder",
     .plugin.name = "GSF Decoder",
-    .plugin.descr = "GSF Decoder based on viogsf library utilising VBA-M.",
+    .plugin.descr = "GSF Decoder based on viogsf library utilising VBA-M."
+    "\n\nCompile Parameters:\n"
+    #ifdef BUILD_RELEASE
+    " + BUILD_RELEASE\n"
+    #endif
+    #ifdef BUILD_DEBUG
+    " + BUILD_DEBUG"
+    #endif
+    #ifdef ENABLE_LOGGING
+    " + ENABLE_LOGGING\n"
+    #endif
+    #ifdef STDERR_DEBUGGING
+    " + STDERR_DEBUGGING\n"
+    #endif
+    #ifdef LOG_FADE
+    " + LOG_FADE\n"
+    #endif
+    #ifdef SAMPLERATE
+    " + SAMPLE_RATE: " EXPAND(SAMPLERATE)
+    #endif
+    ,
     .plugin.website = "https://github.com/joshbarrass/deadbeef_GSFdecoder",
     .plugin.copyright = "Licensed under GPL v2",
     .plugin.start = gsf_start,
