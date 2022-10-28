@@ -4,6 +4,6 @@
 #ifndef SAMPLERATE
 #define SAMPLERATE 44100
 #endif
-constexpr int SAMPLE_RATE = PLAYBACK_RATE;
+constexpr int SAMPLE_RATE = SAMPLERATE;
 
 #endif
