@@ -165,6 +165,9 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   info->readpos = 0;
   info->plugin = plugin;
 
+  // add sample rate information to the status bar
+  deadbeef->pl_set_meta_int(it, ":SAMPLERATE", info->fmt.samplerate);
+
   deadbeef->pl_lock ();
   std::string uri(deadbeef->pl_find_meta (it, ":URI"));
   deadbeef->pl_unlock ();
