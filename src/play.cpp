@@ -85,9 +85,12 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
   // need to trim the buffer, but ONLY if we aren't looping!
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
-    size_t remaining_samples = total_length_samples(state->fMetadata, sample_rate) - state->readsample;
-    if (to_copy > remaining_samples)
-      to_copy = remaining_samples;
+    int64_t remaining_samples = total_length_samples(state->fMetadata, sample_rate) - state->readsample;
+    // one sample is 4 bytes (16-bit per channel, 2 channels), so we
+    // must convert remaining_samples into bytes and use this value.
+    size_t remaining_bytes = remaining_samples * 4;
+    if (to_copy > remaining_bytes)
+      to_copy = remaining_bytes;
 
     const int64_t fadeout_start = length_to_samples(state->fMetadata.Length, sample_rate);
     const int64_t readsample = state->readsample;
