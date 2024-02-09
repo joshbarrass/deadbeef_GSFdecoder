@@ -29,12 +29,13 @@ ENDIF()
 OPTION (LOG_FADE "Use a logarithmic fadeout instead of a linear fadeout" OFF)
 IF(LOG_FADE)
   add_compile_definitions(LOG_FADE=1)
+  message("-- Logarithmic fadeout enabled")
 ENDIF()
 
-SET (SAMPLE_RATE "44100" CACHE STRING "Set the sample rate to be used for playback")
-IF(SAMPLE_RATE)
-  add_compile_definitions(SAMPLERATE=${SAMPLE_RATE})
-  message("-- Sample rate set to ${SAMPLE_RATE}Hz")
+SET (DEFAULT_SAMPLE_RATE "44100" CACHE STRING "Set the default sample rate to be used for playback if not specified by the config")
+IF(DEFAULT_SAMPLE_RATE)
+  add_compile_definitions(DEFAULTSAMPLERATE=${DEFAULT_SAMPLE_RATE})
+  message("-- Default sample rate set to ${DEFAULT_SAMPLE_RATE}Hz")
 ENDIF()
 
 # add include dir
