@@ -20,7 +20,7 @@ static const char *exts[] = {"minigsf", NULL};
 
 static const char settings_dlg[] =
   "property \"Sample rate\" entry gsf.samplerate " EXPAND(DEFAULTSAMPLERATE) ";\n"
-  "property \"Use logarithmic fadeout\" checkbox gsf.log_fade 1;\n"
+  "property \"Use logarithmic fadeout\" checkbox gsf.log_fade 1;\n" // this could be a dropdown in future to choose from different fadeout algorithms?
   ;
 
 static DB_decoder_t plugin = {
