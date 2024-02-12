@@ -34,6 +34,7 @@ struct PluginState {
   GSF_ROM ROM;
   uint32_t entry_point;
   bool set_entry;
+  bool use_log_fade;
   GBASystem fEmulator;
 };
 

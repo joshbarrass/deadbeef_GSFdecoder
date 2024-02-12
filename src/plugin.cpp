@@ -9,7 +9,7 @@
 // plugin state will often occupy the same memory as a previous state,
 // must be careful to ensure everything is properly initialised to
 // avoid segfaults
-PluginState::PluginState() : fFileInfo(), readsample(0), fInit(false), hints(0), fMetadata(), output(), ROM(), entry_point(0), set_entry(false), fEmulator() {}
+PluginState::PluginState() : fFileInfo(), readsample(0), fInit(false), hints(0), fMetadata(), output(), ROM(), entry_point(0), set_entry(false), use_log_fade(false), fEmulator() {}
 
 PluginState::~PluginState() {
   if (fInit) {
