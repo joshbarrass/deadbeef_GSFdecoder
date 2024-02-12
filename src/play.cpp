@@ -82,22 +82,25 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
   bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   bool use_log_fade = state->use_log_fade;
   if (!should_loop) {
-    int64_t remaining_samples = total_length_samples(state->fMetadata, sample_rate) - state->readsample;
+    const int64_t total_samples = total_length_samples(state->fMetadata, sample_rate);
+    const int64_t length_samples = length_to_samples(state->fMetadata.Length, sample_rate);
+    const int64_t fadeout_samples = length_to_samples(state->fMetadata.Fadeout, sample_rate);
+
+    const int64_t readsample = state->readsample;
+    const int64_t remaining_samples = total_samples - readsample;
     // one sample is 4 bytes (16-bit per channel, 2 channels), so we
     // must convert remaining_samples into bytes and use this value.
-    size_t remaining_bytes = remaining_samples * 4;
+    const size_t remaining_bytes = remaining_samples * 4;
     if (to_copy > remaining_bytes)
       to_copy = remaining_bytes;
 
-    const int64_t fadeout_start = length_to_samples(state->fMetadata.Length, sample_rate);
-    const int64_t readsample = state->readsample;
+    const int64_t fadeout_start = length_samples;
     // each sample is 4 bytes with 2 bytes per channel
     // fadeout must be applied to each channel separately
     int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
     double fadeout_factor;
     if (use_log_fade) {
-      fadeout_factor = log_fade_half_factor(
-          length_to_samples(state->fMetadata.Fadeout, sample_rate), 0.25);
+      fadeout_factor = log_fade_half_factor(fadeout_samples, 0.25);
     }
     // only apply the fadeout to the samples we will copy
     // other samples will be moved down the buffer and the fadeout
@@ -106,12 +109,9 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
       for (int i = 0; i < to_copy / 2; ++i) { // div 2 here as we process one channel (2 bytes) at a time
         if (use_log_fade) {
           channel_samples[i] =
-              log_fade(channel_samples[i], readsample + (int)(i), fadeout_start,
-                       fadeout_factor);
+              log_fade(channel_samples[i], readsample + (int)(i), fadeout_start, fadeout_factor);
         } else {
-          channel_samples[i] = linear_fade(
-              channel_samples[i], readsample + i, fadeout_start,
-              length_to_samples(state->fMetadata.Fadeout, sample_rate));
+          channel_samples[i] = linear_fade(channel_samples[i], readsample + i, fadeout_start, fadeout_samples);
         }
       }
     }
