@@ -45,9 +45,6 @@ static DB_decoder_t plugin = {
     #ifdef STDERR_DEBUGGING
     " + STDERR_DEBUGGING\n"
     #endif
-    #ifdef LOG_FADE
-    " + LOG_FADE\n"
-    #endif
     #ifdef DEFAULTSAMPLERATE
     " + DEFAULT_SAMPLE_RATE: " EXPAND(DEFAULTSAMPLERATE)
     #endif

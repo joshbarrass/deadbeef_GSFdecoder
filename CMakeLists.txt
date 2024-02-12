@@ -26,12 +26,6 @@ IF(STDERR_DEBUGGING)
   add_compile_definitions(STDERR_DEBUGGING=1)
 ENDIF()
 
-OPTION (LOG_FADE "Use a logarithmic fadeout instead of a linear fadeout" OFF)
-IF(LOG_FADE)
-  add_compile_definitions(LOG_FADE=1)
-  message("-- Logarithmic fadeout enabled")
-ENDIF()
-
 SET (DEFAULT_SAMPLE_RATE "44100" CACHE STRING "Set the default sample rate to be used for playback if not specified by the config")
 IF(DEFAULT_SAMPLE_RATE)
   add_compile_definitions(DEFAULTSAMPLERATE=${DEFAULT_SAMPLE_RATE})
