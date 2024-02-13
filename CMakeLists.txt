@@ -12,8 +12,6 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -fno-math-errno -fno-trapping-math")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -fno-math-errno -fno-trapping-math")
-message("${CMAKE_C_FLAGS_RELEASE}")
-message("${CMAKE_CXX_FLAGS_RELEASE}")
 
 # set build type variable in preprocessor
 if(CMAKE_BUILD_TYPE)
