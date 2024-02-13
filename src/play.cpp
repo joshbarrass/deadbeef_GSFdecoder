@@ -22,19 +22,19 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
-inline long length_to_samples(double length_ms, long sample_rate) {
+inline constexpr long length_to_samples(const double length_ms, const long sample_rate) {
   return sample_rate * length_ms / 1000;
 }
 
-inline long total_length_samples(const TrackMetadata &meta, long sample_rate) {
+inline constexpr long total_length_samples(const TrackMetadata &meta, const long sample_rate) {
   return length_to_samples(meta.Length, sample_rate) + length_to_samples(meta.Fadeout, sample_rate);
 }
 
-inline long total_length_seconds(const TrackMetadata &meta) {
+inline constexpr long total_length_seconds(const TrackMetadata &meta) {
   return (float)(meta.Length + meta.Fadeout) / 1000.0;
 }
 
-inline int16_t linear_fade(const int16_t sample, const long sample_n, const long fadeout_start, const long fadeout_samples) {
+inline constexpr int16_t linear_fade(const int16_t sample, const long sample_n, const long fadeout_start, const long fadeout_samples) {
   if (sample_n < fadeout_start)
     return sample;
 
