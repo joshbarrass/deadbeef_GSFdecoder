@@ -22,25 +22,25 @@ inline PluginState *get_plugin_state(DB_fileinfo_t *_info) {
   return (PluginState*)_info;
 }
 
-inline int64_t length_to_samples(double length_ms, int64_t sample_rate) {
+inline long length_to_samples(double length_ms, long sample_rate) {
   return sample_rate * length_ms / 1000;
 }
 
-inline int64_t total_length_samples(const TrackMetadata &meta, int64_t sample_rate) {
+inline long total_length_samples(const TrackMetadata &meta, long sample_rate) {
   return length_to_samples(meta.Length, sample_rate) + length_to_samples(meta.Fadeout, sample_rate);
 }
 
-inline float total_length_seconds(const TrackMetadata &meta) {
+inline long total_length_seconds(const TrackMetadata &meta) {
   return (float)(meta.Length + meta.Fadeout) / 1000.0;
 }
 
-inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const int64_t fadeout_start, const int64_t fadeout_samples) {
+inline int16_t linear_fade(const int16_t sample, const long sample_n, const long fadeout_start, const long fadeout_samples) {
   if (sample_n < fadeout_start)
     return sample;
 
   // don't worry about x > fadeout_samples; this should never happen
   // as any earlier checks will end the track before then
-  const int64_t x = sample_n - fadeout_start;
+  const long x = sample_n - fadeout_start;
   const double m = 1.0 / (double)(fadeout_samples);
   double factor = 1 - m*x;
   return factor * sample;
@@ -48,7 +48,7 @@ inline int16_t linear_fade(const int16_t sample, const int64_t sample_n, const i
 
 // used for determining a factor that reduces the signal to
 // A*lower_threshold after fadeout_samples
-inline const double log_fade_factor(const int64_t fadeout_samples, const double lower_threshold) {
+inline const double log_fade_factor(const long fadeout_samples, const double lower_threshold) {
   // s'(n) = f**n * s(n)
   // want f such that for n=fadeout_samples, f**n = lower_threshold
   // f = lower_threshold**(1/n)
@@ -57,15 +57,15 @@ inline const double log_fade_factor(const int64_t fadeout_samples, const double 
 
 // used for determining a factor that reduces the signal to A*factor
 // after fadeout_samples/2
-inline const double log_fade_half_factor(const int64_t fadeout_samples, const double factor) {
+inline const double log_fade_half_factor(const long fadeout_samples, const double factor) {
   // s'(n) = f**n * s(n)
   // want f such that for n=fadeout_samples/2, f**n = factor
   // f = factor**(2/fadeout_samples)
   return pow(factor, (double)2.0/(double)fadeout_samples);
 }
 
-inline int16_t log_fade(const int16_t sample, const int64_t sample_n,
-                        const int64_t fadeout_start,
+inline int16_t log_fade(const int16_t sample, const long sample_n,
+                        const long fadeout_start,
                         const double fadeout_factor) {
   if (sample_n < fadeout_start)
     return sample;
@@ -76,25 +76,25 @@ inline int16_t log_fade(const int16_t sample, const int64_t sample_n,
 }
 
 inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginState *state) {
-  int sample_rate = state->fFileInfo.fmt.samplerate;
+  const long sample_rate = state->fFileInfo.fmt.samplerate;
   // if we would copy more samples than the length of the file, we
   // need to trim the buffer, but ONLY if we aren't looping!
-  bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
-  bool use_log_fade = state->use_log_fade;
+  const bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
+  const bool use_log_fade = state->use_log_fade;
   if (!should_loop) {
-    const int64_t total_samples = total_length_samples(state->fMetadata, sample_rate);
-    const int64_t length_samples = length_to_samples(state->fMetadata.Length, sample_rate);
-    const int64_t fadeout_samples = length_to_samples(state->fMetadata.Fadeout, sample_rate);
+    const long total_samples = total_length_samples(state->fMetadata, sample_rate);
+    const long length_samples = length_to_samples(state->fMetadata.Length, sample_rate);
+    const long fadeout_samples = length_to_samples(state->fMetadata.Fadeout, sample_rate);
 
-    const int64_t readsample = state->readsample;
-    const int64_t remaining_samples = total_samples - readsample;
+    const long readsample = state->readsample;
+    const long remaining_samples = total_samples - readsample;
     // one sample is 4 bytes (16-bit per channel, 2 channels), so we
     // must convert remaining_samples into bytes and use this value.
     const size_t remaining_bytes = remaining_samples * 4;
     if (to_copy > remaining_bytes)
       to_copy = remaining_bytes;
 
-    const int64_t fadeout_start = length_samples;
+    const long fadeout_start = length_samples;
     // each sample is 4 bytes with 2 bytes per channel
     // fadeout must be applied to each channel separately
     int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
@@ -106,10 +106,10 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
     // other samples will be moved down the buffer and the fadeout
     // will be applied to those later if needed
     if (state->fMetadata.Fadeout > 0) {
-      for (int i = 0; i < to_copy / 2; ++i) { // div 2 here as we process one channel (2 bytes) at a time
+      for (size_t i = 0; i < to_copy / 2; ++i) { // div 2 here as we process one channel (2 bytes) at a time
         if (use_log_fade) {
           channel_samples[i] =
-              log_fade(channel_samples[i], readsample + (int)(i), fadeout_start, fadeout_factor);
+              log_fade(channel_samples[i], readsample + i, fadeout_start, fadeout_factor);
         } else {
           channel_samples[i] = linear_fade(channel_samples[i], readsample + i, fadeout_start, fadeout_samples);
         }
@@ -154,7 +154,7 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   }
   #endif
 
-  int config_sample_rate = deadbeef->conf_get_int ("gsf.samplerate", DEFAULT_SAMPLE_RATE);
+  long config_sample_rate = deadbeef->conf_get_int64 ("gsf.samplerate", DEFAULT_SAMPLE_RATE);
   state->use_log_fade = deadbeef->conf_get_int("gsf.log_fade", 1);
 
   info->fmt.bps = 16;
@@ -193,7 +193,7 @@ int gsf_init(DB_fileinfo_t *info, DB_playItem_t *it) {
   // initialise the emulator
   // multiboot corresponds to 0x2000000 entry point
   state->fEmulator.cpuIsMultiBoot = (state->entry_point >> 24 == 2);
-  int size = CPULoadRom(&state->fEmulator, state->ROM.GetArray(), state->ROM.GetSize());
+  size_t size = CPULoadRom(&state->fEmulator, state->ROM.GetArray(), state->ROM.GetSize());
   if (!size) {
     trace("GSF ERR: failed to load ROM\n");
     return -3;
@@ -233,7 +233,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   auto deadbeef = get_API_pointer();
   auto plugin = get_plugin_pointer();
   PluginState *state = get_plugin_state(_info);
-  int sample_rate = _info->fmt.samplerate;
+  const long sample_rate = _info->fmt.samplerate;
 
   if (!state->fInit) {
     trace("GSF ERR: attempt to read from uninitialised plugin state\n");
@@ -246,7 +246,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
   std::cerr << "GSF DEBUG: readsample: " << state->readsample << ", length: " << state->fMetadata.LengthSamples << std::endl;
   #endif
   #endif
-  bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
+  const bool should_loop = (deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE) && (state->hints & DDB_DECODER_HINT_CAN_LOOP);
   if (!should_loop) {
     if (state->readsample >= total_length_samples(state->fMetadata, sample_rate)) {
 #ifdef BUILD_DEBUG
@@ -315,7 +315,7 @@ int gsf_read(DB_fileinfo_t *_info, char *buffer, int nbytes) {
 }
 
 int gsf_seek(DB_fileinfo_t *info, float seconds) {
-  int sample = seconds * info->fmt.samplerate;
+  long sample = seconds * info->fmt.samplerate;
   return gsf_seek_sample(info, sample);
 }
 
@@ -331,7 +331,7 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
     state->readsample = 0;
   }
 
-  int to_seek = sample - state->readsample;
+  long to_seek = sample - state->readsample;
   size_t &in_buffer = state->output.bytes_in_buffer;
   while (to_seek > 0) {
     #ifdef BUILD_DEBUG
@@ -343,7 +343,7 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
     #endif
     #endif
     if (in_buffer > 0) {
-      int samples_in_buffer = in_buffer / 4;
+      long samples_in_buffer = in_buffer / 4;
       if (samples_in_buffer <= to_seek) {
         #ifdef BUILD_DEBUG
         tracedbg("GSF DEBUG: Discarding buffer\n");
@@ -362,7 +362,7 @@ int gsf_seek_sample(DB_fileinfo_t *info, int sample) {
         continue;
       }
       // otherwise, drop as many bytes as we need for the needed seek
-      int bytes_needed = to_seek * 4;
+      size_t bytes_needed = to_seek * 4;
       unsigned char *head_sample = &state->output.sample_buffer[0];
       std::copy(head_sample + bytes_needed,
                 head_sample + in_buffer,
