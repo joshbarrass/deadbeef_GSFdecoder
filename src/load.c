@@ -18,6 +18,11 @@ static int gsf_stop(void) { return 0; }
 
 static const char *exts[] = {"minigsf", NULL};
 
+static const char settings_dlg[] =
+  "property \"Sample rate\" entry gsf.samplerate " EXPAND(DEFAULTSAMPLERATE) ";\n"
+  "property \"Use logarithmic fadeout\" checkbox gsf.log_fade 1;\n" // this could be a dropdown in future to choose from different fadeout algorithms?
+  ;
+
 static DB_decoder_t plugin = {
     DDB_REQUIRE_API_VERSION(1, 12)
  
@@ -40,17 +45,15 @@ static DB_decoder_t plugin = {
     #ifdef STDERR_DEBUGGING
     " + STDERR_DEBUGGING\n"
     #endif
-    #ifdef LOG_FADE
-    " + LOG_FADE\n"
-    #endif
-    #ifdef SAMPLERATE
-    " + SAMPLE_RATE: " EXPAND(SAMPLERATE)
+    #ifdef DEFAULTSAMPLERATE
+    " + DEFAULT_SAMPLE_RATE: " EXPAND(DEFAULTSAMPLERATE)
     #endif
     ,
     .plugin.website = "https://github.com/joshbarrass/deadbeef_GSFdecoder",
     .plugin.copyright = "Licensed under GPL v2",
     .plugin.start = gsf_start,
     .plugin.stop = gsf_stop,
+    .plugin.configdialog = settings_dlg,
     .plugin.flags = 0
     #ifdef ENABLE_LOGGING
     | DDB_PLUGIN_FLAG_LOGGING

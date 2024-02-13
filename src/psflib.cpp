@@ -172,10 +172,10 @@ int gsf_info_callback(void *context, const char *name, const char *value) {
     return 0;
   else if (!strcasecmp(name, "length")) {
     meta->Length = parse_time(value); // milliseconds
-    meta->LengthSamples = SAMPLE_RATE * meta->Length / 1000;
+    // meta->LengthSamples = SAMPLE_RATE * meta->Length / 1000;
   } else if (!strcasecmp(name, "fade")) {
     meta->Fadeout = parse_time(value); // milliseconds
-    meta->FadeoutSamples = SAMPLE_RATE * meta->Fadeout / 1000;
+    // meta->FadeoutSamples = SAMPLE_RATE * meta->Fadeout / 1000;
   } else if (!strcasecmp(name, "title"))
     meta->Title = value;
   else if (!strcasecmp(name, "artist"))
