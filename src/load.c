@@ -27,7 +27,7 @@ static DB_decoder_t plugin = {
     DDB_REQUIRE_API_VERSION(1, 12)
  
     .plugin.version_major = 0,
-    .plugin.version_minor = 11,
+    .plugin.version_minor = 12,
     .plugin.type = DB_PLUGIN_DECODER,
     .plugin.id = "gsfdecoder",
     .plugin.name = "GSF Decoder",
