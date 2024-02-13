@@ -11,7 +11,7 @@ public:
   int GetSize() const { return fData.size(); }
   uint8_t *GetArray() { return fData.data(); }
 
-  int WriteBytes(const uint8_t *, const unsigned int, const unsigned int);
+  int WriteBytes(const uint8_t *, const size_t, const size_t);
 
 private:
   std::vector<uint8_t> fData;
