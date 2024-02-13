@@ -9,6 +9,7 @@ struct TrackMetadata {
   TrackMetadata();
   ~TrackMetadata();
 
+  // TODO: maybe bring back the *Samples variables as an optimisation?
   double Length; // milliseconds
   // int64_t LengthSamples;
   double Fadeout; // milliseconds
