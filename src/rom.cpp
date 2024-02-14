@@ -9,9 +9,9 @@ GSF_ROM::~GSF_ROM() {}
 // given offset location. Bounds checking will be performed to ensure
 // the internal data structure is of a sufficient size to store the
 // data
-int GSF_ROM::WriteBytes(const uint8_t *data, const unsigned int n, const unsigned int offset) {
+int GSF_ROM::WriteBytes(const uint8_t *data, const size_t n, const size_t offset) {
   // ensure vector is sufficiently large
-  unsigned int required_size = offset + n;
+  size_t required_size = offset + n;
   if (fData.size() < required_size) {
     fData.resize(required_size, 0);
   }
