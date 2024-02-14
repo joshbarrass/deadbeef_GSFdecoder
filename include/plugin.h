@@ -27,7 +27,7 @@ struct PluginState {
   ~PluginState();
 
   DB_fileinfo_t fFileInfo;
-  sample_t readsample;
+  sample_count_t readsample;
   bool fInit;
   uint32_t hints;
   TrackMetadata fMetadata;
