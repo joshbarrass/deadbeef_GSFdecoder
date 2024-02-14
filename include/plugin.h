@@ -2,6 +2,7 @@
 #define GSF_PLUGIN_H 1
 
 #include "deadbeef/deadbeef.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +27,7 @@ struct PluginState {
   ~PluginState();
 
   DB_fileinfo_t fFileInfo;
-  long readsample;
+  sample_t readsample;
   bool fInit;
   uint32_t hints;
   TrackMetadata fMetadata;
