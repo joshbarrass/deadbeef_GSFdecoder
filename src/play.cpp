@@ -30,8 +30,8 @@ inline constexpr sample_count_t total_length_samples(const TrackMetadata &meta, 
   return length_to_samples(meta.Length, sample_rate) + length_to_samples(meta.Fadeout, sample_rate);
 }
 
-inline constexpr sample_count_t total_length_seconds(const TrackMetadata &meta) {
-  return (float)(meta.Length + meta.Fadeout) / 1000.0;
+inline constexpr double total_length_seconds(const TrackMetadata &meta) {
+  return (meta.Length + meta.Fadeout) / 1000.0;
 }
 
 inline constexpr sample_t linear_fade(const sample_t sample, const sample_count_t sample_n, const sample_count_t fadeout_start, const sample_count_t fadeout_samples) {
