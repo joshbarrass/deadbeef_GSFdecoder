@@ -34,7 +34,7 @@ inline constexpr sample_count_t total_length_seconds(const TrackMetadata &meta) 
   return (float)(meta.Length + meta.Fadeout) / 1000.0;
 }
 
-inline constexpr int16_t linear_fade(const int16_t sample, const sample_count_t sample_n, const sample_count_t fadeout_start, const sample_count_t fadeout_samples) {
+inline constexpr sample_t linear_fade(const sample_t sample, const sample_count_t sample_n, const sample_count_t fadeout_start, const sample_count_t fadeout_samples) {
   if (sample_n < fadeout_start)
     return sample;
 
@@ -64,7 +64,7 @@ inline const double log_fade_half_factor(const sample_count_t fadeout_samples, c
   return pow(factor, (double)2.0/(double)fadeout_samples);
 }
 
-inline int16_t log_fade(const int16_t sample, const sample_count_t sample_n,
+inline sample_t log_fade(const sample_t sample, const sample_count_t sample_n,
                         const sample_count_t fadeout_start,
                         const double fadeout_factor) {
   if (sample_n < fadeout_start)
@@ -97,7 +97,7 @@ inline size_t adjust_track_end(DB_functions_t *deadbeef, size_t to_copy, PluginS
     const sample_count_t fadeout_start = length_samples;
     // each sample is 4 bytes with 2 bytes per channel
     // fadeout must be applied to each channel separately
-    int16_t* channel_samples = (int16_t*)state->output.sample_buffer.data();
+    sample_t* channel_samples = (sample_t*)state->output.sample_buffer.data();
     double fadeout_factor;
     if (use_log_fade) {
       fadeout_factor = log_fade_half_factor(fadeout_samples, 0.25);
